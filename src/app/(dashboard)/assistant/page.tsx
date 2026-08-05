@@ -7,18 +7,18 @@ type SarvamLanguage =
   | "en-IN" | "hi-IN" | "ta-IN" | "te-IN" | "kn-IN"
   | "ml-IN" | "bn-IN" | "gu-IN" | "mr-IN" | "pa-IN" | "or-IN";
 
-const LANGUAGE_OPTIONS: { value: SarvamLanguage; label: string }[] = [
-  { value: "en-IN", label: "English" },
-  { value: "hi-IN", label: "हिन्दी (Hindi)" },
-  { value: "ta-IN", label: "தமிழ் (Tamil)" },
-  { value: "te-IN", label: "తెలుగు (Telugu)" },
-  { value: "kn-IN", label: "ಕನ್ನಡ (Kannada)" },
-  { value: "ml-IN", label: "മലയാളം (Malayalam)" },
-  { value: "bn-IN", label: "বাংলা (Bengali)" },
-  { value: "gu-IN", label: "ગુજરાતી (Gujarati)" },
-  { value: "mr-IN", label: "मराठी (Marathi)" },
-  { value: "pa-IN", label: "ਪੰਜਾਬੀ (Punjabi)" },
-  { value: "or-IN", label: "ଓଡ଼ିଆ (Odia)" },
+const LANGUAGE_OPTIONS: { value: SarvamLanguage; label: string; speechCode: string }[] = [
+  { value: "en-IN", label: "English", speechCode: "en-IN" },
+  { value: "hi-IN", label: "हिन्दी (Hindi)", speechCode: "hi-IN" },
+  { value: "ta-IN", label: "தமிழ் (Tamil)", speechCode: "ta-IN" },
+  { value: "te-IN", label: "తెలుగు (Telugu)", speechCode: "te-IN" },
+  { value: "kn-IN", label: "ಕನ್ನಡ (Kannada)", speechCode: "kn-IN" },
+  { value: "ml-IN", label: "മലയാളം (Malayalam)", speechCode: "ml-IN" },
+  { value: "bn-IN", label: "বাংলা (Bengali)", speechCode: "bn-IN" },
+  { value: "gu-IN", label: "ગુજરાતી (Gujarati)", speechCode: "gu-IN" },
+  { value: "mr-IN", label: "मराठी (Marathi)", speechCode: "mr-IN" },
+  { value: "pa-IN", label: "ਪੰਜਾਬੀ (Punjabi)", speechCode: "pa-IN" },
+  { value: "or-IN", label: "ଓଡ଼ିଆ (Odia)", speechCode: "or-IN" },
 ];
 
 interface ChatMessage {
@@ -33,11 +33,14 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [language, setLanguage] = useState<SarvamLanguage>("en-IN");
+  const [autoSpeak, setAutoSpeak] = useState(true);
   const [sending, setSending] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<unknown | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Load chat history
   useEffect(() => {
@@ -58,11 +61,89 @@ export default function AssistantPage() {
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, sending]);
+
+  // Clean audio on unmount
+  useEffect(() => {
+    return () => {
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+      }
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Speech output function (TTS)
+  const speakText = async (text: string, msgId: string, langCode: SarvamLanguage) => {
+    // Stop any existing speech
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    if (speakingId === msgId) {
+      setSpeakingId(null);
+      return;
+    }
+
+    setSpeakingId(msgId);
+
+    // Try Sarvam TTS API first
+    try {
+      const res = await fetch("/api/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "tts",
+          text: text.slice(0, 500), // Sarvam limit per request
+          language: langCode,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.data?.audioBase64) {
+        const audioSrc = `data:audio/wav;base64,${json.data.audioBase64}`;
+        const audio = new Audio(audioSrc);
+        currentAudioRef.current = audio;
+
+        audio.onended = () => setSpeakingId(null);
+        audio.onerror = () => fallbackWebSpeech(text, langCode, msgId);
+        await audio.play();
+        return;
+      }
+    } catch {
+      // ignore and fallback
+    }
+
+    // Fallback: Browser Web Speech Synthesis
+    fallbackWebSpeech(text, langCode, msgId);
+  };
+
+  const fallbackWebSpeech = (text: string, langCode: SarvamLanguage, msgId: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setSpeakingId(null);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const speechLang = LANGUAGE_OPTIONS.find((l) => l.value === langCode)?.speechCode || "en-IN";
+    utterance.lang = speechLang;
+    utterance.rate = 0.95;
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Send message
-  const handleSend = async (text?: string) => {
-    const msg = (text ?? input).trim();
+  const handleSend = async (textToSend?: string) => {
+    const msg = (textToSend ?? input).trim();
     if (!msg || sending) return;
 
     const userMsg: ChatMessage = {
@@ -85,21 +166,28 @@ export default function AssistantPage() {
       const json = await res.json();
 
       const reply = json.data?.reply || json.error?.message || "Sorry, I couldn't process that.";
+      const newMsgId = (Date.now() + 1).toString();
+
       const assistantMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: newMsgId,
         role: "assistant",
         content: reply,
         language,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+
+      // Auto-speak response if enabled
+      if (autoSpeak) {
+        void speakText(reply, newMsgId, language);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Network error. Please try again.",
+          content: "Network error. Please check your connection and try again.",
           language: "en-IN",
         },
       ]);
@@ -108,75 +196,75 @@ export default function AssistantPage() {
     }
   };
 
-  // Voice recording
-  const toggleRecording = async () => {
+  // Voice recording (Speech-to-Text)
+  const toggleRecording = () => {
     if (recording) {
-      mediaRecorderRef.current?.stop();
+      if (recognitionRef.current) {
+        try {
+          (recognitionRef.current as { stop: () => void }).stop();
+        } catch {
+          // ignore
+        }
+      }
       setRecording(false);
       return;
     }
 
+    if (typeof window === "undefined") return;
+
+    // Check for SpeechRecognition support
+    const SpeechRecognitionWindow =
+      (window as unknown as Record<string, unknown>).SpeechRecognition ||
+      (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionWindow) {
+      alert("Speech recognition is not supported in this browser. Please use Google Chrome, Edge, or Brave.");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
+      const recognition = new (SpeechRecognitionWindow as new () => {
+        continuous: boolean;
+        interimResults: boolean;
+        lang: string;
+        onresult: (e: {
+          resultIndex: number;
+          results: { [key: number]: { transcript: string } }[];
+        }) => void;
+        onerror: (e: { error: string }) => void;
+        onend: () => void;
+        start: () => void;
+        stop: () => void;
+      })();
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = LANGUAGE_OPTIONS.find((l) => l.value === language)?.speechCode || "en-IN";
+
+      recognitionRef.current = recognition;
+
+      recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setInput(transcript);
       };
 
-      mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-
-        // Convert to base64
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(",")[1];
-          if (!base64) return;
-
-          try {
-            const res = await fetch("/api/voice", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "stt", audioBase64: base64, language }),
-            });
-            const json = await res.json();
-            if (json.data?.transcript) {
-              setInput(json.data.transcript);
-            }
-          } catch {
-            // fallback: use Web Speech API
-          }
-        };
-        reader.readAsDataURL(blob);
+      recognition.onerror = (err) => {
+        console.warn("Speech recognition error:", err);
+        setRecording(false);
       };
 
-      mediaRecorder.start();
+      recognition.onend = () => {
+        setRecording(false);
+      };
+
+      recognition.start();
       setRecording(true);
-    } catch {
-      // Fallback: Web Speech API
-      if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-        const SpeechRecognition =
-          (window as unknown as Record<string, unknown>).SpeechRecognition ||
-          (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
-        const recognition = new (SpeechRecognition as new () => {
-          lang: string;
-          onresult: (e: { results: { transcript: string }[][] }) => void;
-          onerror: () => void;
-          onend: () => void;
-          start: () => void;
-        })();
-        recognition.lang = language;
-        recognition.onresult = (e: { results: { transcript: string }[][] }) => {
-          setInput(e.results[0][0].transcript);
-        };
-        recognition.onerror = () => setRecording(false);
-        recognition.onend = () => setRecording(false);
-        recognition.start();
-        setRecording(true);
-      }
+    } catch (err) {
+      console.error("Failed to start speech recognition:", err);
+      setRecording(false);
     }
   };
 
@@ -189,10 +277,24 @@ export default function AssistantPage() {
 
   return (
     <div className={styles.container}>
-      {/* Header with language selector */}
+      {/* Header with language selector and Auto-Speak toggle */}
       <div className={styles.header}>
-        <span className={styles.title}>🤖 Sarvam AI Assistant</span>
+        <div className={styles.titleGroup}>
+          <span className={styles.title}>🤖 Sarvam AI Voice & Text Assistant</span>
+          <span className={styles.subtitle}>WCAG 2.2 AA Accessibility Specialist</span>
+        </div>
+
         <div className={styles.controls}>
+          <label className={styles.autoSpeakToggle}>
+            <input
+              type="checkbox"
+              className={styles.checkbox}
+              checked={autoSpeak}
+              onChange={(e) => setAutoSpeak(e.target.checked)}
+            />
+            🔊 Auto-Speak Answers
+          </label>
+
           <select
             className={styles.langSelect}
             value={language}
@@ -212,10 +314,10 @@ export default function AssistantPage() {
       <div className={styles.messages}>
         {messages.length === 0 ? (
           <div className={styles.empty}>
-            <span className={styles.emptyIcon}>💬</span>
-            <span className={styles.emptyTitle}>Start a Conversation</span>
+            <span className={styles.emptyIcon}>🎙️</span>
+            <span className={styles.emptyTitle}>Voice & Multilingual Assistance Ready</span>
             <span className={styles.emptyHint}>
-              Ask me about WCAG rules, accessibility fixes, or how to improve your project's compliance score. I support 11 Indian languages!
+              Click the microphone button to speak, or type your question. Responses can be spoken aloud in Hindi, Tamil, Telugu, Bengali, Kannada, Marathi, and 5 other Indian languages!
             </span>
             <div className={styles.suggestions}>
               <button
@@ -248,62 +350,96 @@ export default function AssistantPage() {
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`${styles.message} ${
-                msg.role === "user" ? styles.userMsg : styles.assistantMsg
+              className={`${styles.messageWrapper} ${
+                msg.role === "user" ? styles.userWrapper : styles.assistantWrapper
               }`}
             >
-              {msg.content}
+              <div
+                className={`${styles.message} ${
+                  msg.role === "user" ? styles.userMsg : styles.assistantMsg
+                }`}
+              >
+                {msg.content}
+              </div>
+
+              {msg.role === "assistant" && (
+                <div className={styles.msgFooter}>
+                  <button
+                    className={`${styles.speakBtn} ${
+                      speakingId === msg.id ? styles.speakingActive : ""
+                    }`}
+                    onClick={() =>
+                      void speakText(msg.content, msg.id, msg.language as SarvamLanguage)
+                    }
+                    title="Speak text out loud using Sarvam AI voice"
+                    type="button"
+                  >
+                    {speakingId === msg.id ? "⏸️ Pause Audio" : "🔊 Listen"}
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
 
-        {sending && <div className={styles.typing}>Sarvam AI is thinking…</div>}
+        {sending && <div className={styles.typing}>Sarvam AI is thinking and translating…</div>}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input area */}
       <div className={styles.inputArea}>
-        <button
-          className={`${styles.voiceBtn} ${recording ? styles.voiceActive : ""}`}
-          onClick={toggleRecording}
-          title={recording ? "Stop recording" : "Start voice input"}
-          aria-label={recording ? "Stop voice recording" : "Start voice recording"}
-          type="button"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="23" />
-            <line x1="8" y1="23" x2="16" y2="23" />
-          </svg>
-        </button>
+        {recording && (
+          <div className={styles.recordingStatus}>
+            <span className={styles.recordingDot} />
+            🎙️ Listening... Speak now!
+          </div>
+        )}
 
-        <input
-          className={styles.chatInput}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            language === "en-IN"
-              ? "Ask about accessibility, WCAG rules, or code fixes…"
-              : "Type your question in any language…"
-          }
-          disabled={sending}
-        />
+        <div className={styles.inputRow}>
+          <button
+            className={`${styles.voiceBtn} ${recording ? styles.voiceActive : ""}`}
+            onClick={toggleRecording}
+            title={recording ? "Click to stop listening" : "Click to speak via Microphone"}
+            aria-label={recording ? "Stop voice listening" : "Start voice listening"}
+            type="button"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </button>
 
-        <button
-          className={styles.sendBtn}
-          onClick={() => void handleSend()}
-          disabled={!input.trim() || sending}
-          title="Send message"
-          aria-label="Send message"
-          type="button"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        </button>
+          <input
+            className={styles.chatInput}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              recording
+                ? "Listening to your voice..."
+                : language === "en-IN"
+                ? "Ask about accessibility, WCAG rules, or code fixes…"
+                : "Type or speak your question in your selected language…"
+            }
+            disabled={sending}
+          />
+
+          <button
+            className={styles.sendBtn}
+            onClick={() => void handleSend()}
+            disabled={!input.trim() || sending}
+            title="Send message"
+            aria-label="Send message"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
