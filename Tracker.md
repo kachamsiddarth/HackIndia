@@ -348,6 +348,7 @@
 | 2026-08-05 | Fixed decommissioned Groq model ID (`llama3-70b-8192`) and completed Phase 8 (AI Governance): built `GET /api/governance`, `GET /api/governance/[id]`, `/governance` dashboard page, `GovernanceLogCard`, `GovernanceTimeline`, and detail overlay modal | Phase 8 |
 | 2026-08-05 | Completed Phase 9 (Repository Explorer & Code Diffs): built `GET /api/projects/[id]/files`, `GET /api/projects/[id]/files/content`, `FileExplorer` component, `CodeBlock` component with inline WCAG annotations, `/projects/[id]/explorer` page, and `/projects/[id]/diff` unified diff viewer page; verified with lint, tsc, and Next.js build | Phase 9 |
 | 2026-08-05 | Completed Phase 10 (Pull Requests & Timeline): built `POST /api/pull-requests/create`, `GET /api/pull-requests`, `PRPanel` component, `GET /api/projects/[id]/timeline`, `TimelineChart`, `ScoreGauge`, and `/projects/[id]/timeline` page; verified with lint, tsc, and Next.js build (25 routes) | Phase 10 |
+| 2026-08-05 | Resolved pipeline execution errors: enforced required `'json'` keyword in system prompts for `json_object` format, enabled active multi-key rotation across all 7 Groq API keys on 429 TPD limit errors, and sanitized raw error JSON in timeline UI | Fixes |
 
 ---
 
