@@ -49,14 +49,18 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
     void loadPRs();
   }, [projectId]);
 
-  const handleCreatePR = async () => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleCreatePR = async (directCommit = false) => {
     if (!pipelineRunId) return;
+    setErrorMessage(null);
+    setSuccessUrl(null);
     try {
       setCreating(true);
       const res = await fetch("/api/pull-requests/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, pipelineRunId, title }),
+        body: JSON.stringify({ projectId, pipelineRunId, title, directCommit }),
       });
       const json = await res.json();
       if (json.data) {
@@ -68,7 +72,7 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
             projectId,
             prNumber: json.data.prNumber,
             prUrl: json.data.prUrl,
-            title,
+            title: directCommit ? `${title} (Direct Commit)` : title,
             status: json.data.status,
             filesModified: json.data.filesModified,
             issuesAddressed: json.data.issuesAddressed,
@@ -78,9 +82,12 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
           ...prev,
         ]);
         setShowForm(false);
+      } else if (json.error?.message) {
+        setErrorMessage(json.error.message);
       }
     } catch (err) {
       console.error("Failed to create PR:", err);
+      setErrorMessage("Failed to create pull request. Check console for details.");
     } finally {
       setCreating(false);
     }
@@ -123,11 +130,20 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
               placeholder="AccessDiff: Accessibility Fixes"
             />
           </div>
+          {errorMessage && (
+            <p style={{ color: "#f87171", fontSize: "0.8rem", margin: "0 0 0.5rem 0" }}>
+              ⚠️ {errorMessage}
+            </p>
+          )}
+
           <div className={styles.actions}>
             <Button variant="secondary" size="sm" onClick={() => setShowForm(false)}>
               Cancel
             </Button>
-            <Button variant="primary" size="sm" isLoading={creating} onClick={handleCreatePR}>
+            <Button variant="secondary" size="sm" isLoading={creating} onClick={() => handleCreatePR(true)}>
+              Direct Commit to Main
+            </Button>
+            <Button variant="primary" size="sm" isLoading={creating} onClick={() => handleCreatePR(false)}>
               Create Pull Request
             </Button>
           </div>

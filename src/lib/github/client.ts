@@ -140,6 +140,69 @@ export class GitHubClient {
     return res.content;
   }
 
+  /** Get reference SHA for a branch */
+  async getBranchRef(owner: string, repo: string, branch = "main"): Promise<string> {
+    try {
+      const res = await this.request<{ object: { sha: string } }>(`/repos/${owner}/${repo}/git/ref/heads/${branch}`);
+      return res.object.sha;
+    } catch {
+      const res = await this.request<{ object: { sha: string } }>(`/repos/${owner}/${repo}/git/ref/heads/HEAD`);
+      return res.object.sha;
+    }
+  }
+
+  /** Create a new git branch from a base SHA */
+  async createBranch(owner: string, repo: string, newBranch: string, baseSha: string): Promise<void> {
+    try {
+      await this.request(`/repos/${owner}/${repo}/git/refs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ref: `refs/heads/${newBranch}`,
+          sha: baseSha,
+        }),
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes("Reference already exists")) {
+        throw err;
+      }
+    }
+  }
+
+  /** Create or update file content on a branch in GitHub */
+  async createOrUpdateFile(
+    owner: string,
+    repo: string,
+    path: string,
+    content: string,
+    commitMessage: string,
+    branch: string
+  ): Promise<void> {
+    let fileSha: string | undefined;
+    try {
+      const res = await this.request<{ sha: string }>(
+        `/repos/${owner}/${repo}/contents/${path}?ref=${branch}`
+      );
+      fileSha = res.sha;
+    } catch {
+      // File doesn't exist yet on branch
+    }
+
+    const base64Content = Buffer.from(content, "utf-8").toString("base64");
+
+    await this.request(`/repos/${owner}/${repo}/contents/${path}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: commitMessage,
+        content: base64Content,
+        branch,
+        ...(fileSha ? { sha: fileSha } : {}),
+      }),
+    });
+  }
+
   /** Create a pull request from a branch containing approved fixes. */
   async createPullRequest(
     owner: string,
