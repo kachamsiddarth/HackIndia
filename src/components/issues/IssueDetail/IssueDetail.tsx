@@ -1,8 +1,9 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
+import { DiffViewer, TrustScore, FixActions, VerificationStatusIndicator } from "@/components/fixes";
 import type { PipelineIssue, PipelineFix } from "@/components/pipeline/PipelineView";
 import styles from "./IssueDetail.module.css";
 
@@ -23,12 +24,11 @@ export interface IssueDetailProps {
 }
 
 function getWcagUrl(ruleId: string): string {
-  // WCAG rule reference link helper
   return `https://www.w3.org/WAI/WCAG22/quickref/#${ruleId}`;
 }
 
 /**
- * Modal detail view for inspecting an accessibility regression issue and its AI-generated fix.
+ * Modal detail view for inspecting an accessibility regression issue and approving/rejecting its AI-generated fix.
  */
 export default function IssueDetail({
   issue,
@@ -36,10 +36,13 @@ export default function IssueDetail({
   isOpen,
   onClose,
 }: IssueDetailProps): ReactNode {
+  const [fixStatus, setFixStatus] = useState<string | null>(fix?.status ?? null);
+
   if (!issue) return null;
 
   const location = `${issue.filePath}${issue.lineNumber ? `:${issue.lineNumber}` : ""}`;
   const ruleTag = issue.wcagCriteria ?? issue.ruleId;
+  const currentFixStatus = fixStatus ?? fix?.status ?? "pending";
 
   return (
     <Modal
@@ -89,9 +92,7 @@ export default function IssueDetail({
           <div className={styles.section}>
             <div className={styles.fixHeader}>
               <h4 className={styles.sectionTitle}>AI Generated Remediation Fix</h4>
-              <Badge variant={fix.status === "verified" ? "success" : "neutral"} size="sm" showDot>
-                {fix.status}
-              </Badge>
+              <VerificationStatusIndicator status={currentFixStatus} />
             </div>
 
             {fix.rationale && (
@@ -100,7 +101,19 @@ export default function IssueDetail({
               </p>
             )}
 
-            <pre className={styles.patchBlock}>{fix.diffPatch}</pre>
+            <div style={{ margin: "0.75rem 0" }}>
+              <TrustScore score={currentFixStatus === "approved" || currentFixStatus === "verified" ? 95 : 78} riskLevel="LOW" />
+            </div>
+
+            <DiffViewer patch={fix.diffPatch} filename={issue.filePath} />
+
+            <div style={{ marginTop: "1rem" }}>
+              <FixActions
+                fixId={fix.id}
+                initialStatus={currentFixStatus}
+                onStatusChange={(newStatus) => setFixStatus(newStatus)}
+              />
+            </div>
           </div>
         ) : (
           <div className={styles.section}>

@@ -169,10 +169,10 @@ NEXT_PUBLIC_APP_URL
 
 | Metric | Value |
 |---|---|
-| Current Phase | Phase 7 — Fixes, Verification & Approval |
-| Tasks Completed | 67/124 |
+| Current Phase | Phase 8 — AI Governance |
+| Tasks Completed | 75/124 |
 | Documentation Status | ✅ Complete (9/9 files) |
-| Implementation Status | Phases 0–6 complete (67/124 tasks) |
+| Implementation Status | Phases 0–7 complete (75/124 tasks) |
 | Last Updated | 2026-08-05 |
 
 ---
@@ -193,6 +193,7 @@ Chronological record of significant decisions made during development.
 | 2026-08-05 | Verified the live pipeline | Compared `kachamsiddarth/acessDemo` commits `7fb144b` and `525a5e6`; 7 regressions, generated fixes, verified fixes, and persisted fixes completed successfully |
 | 2026-08-05 | Extracted `PipelineView` component | Moved pipeline run/status/results rendering out of the page into `src/components/pipeline/PipelineView/` as a pure presentational component, keeping all data-fetching and SSE logic in the page |
 | 2026-08-05 | Completed Phase 6 Pipeline UI & Issue Views | Extracted presentation components (`StageCard`, `ProgressIndicator`, `CommitSelector`, `IssueCard`, `IssueDetail`), integrated `/issues` page with `GET /api/issues` API |
+| 2026-08-05 | Completed Phase 7 Fixes & Verification | Connected 7 API keys Groq pool with model fallback, built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, and API routes `approve`, `reject`, and `rollback` |
 
 ---
 

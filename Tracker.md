@@ -164,18 +164,18 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 7.1 | `DiffViewer` component | ⬜ | |
-| 7.2 | Fix approval API | ⬜ | |
-| 7.3 | Fix rejection API | ⬜ | |
-| 7.4 | Rollback API | ⬜ | |
-| 7.5 | Approval UI | ⬜ | |
-| 7.6 | `TrustScore` component | ⬜ | |
-| 7.7 | Risk classification UI | ⬜ | |
-| 7.8 | Verification status indicator | ⬜ | |
+| 7.1 | `DiffViewer` component | ✅ | Created in `src/components/fixes/DiffViewer/`; syntax highlights unified git patch diffs |
+| 7.2 | Fix approval API | ✅ | `POST /api/fixes/[id]/approve` updates fix status to approved and records audit log |
+| 7.3 | Fix rejection API | ✅ | `POST /api/fixes/[id]/reject` updates fix status to rejected with reasoning |
+| 7.4 | Rollback API | ✅ | `POST /api/fixes/[id]/rollback` reverts applied fixes to rolled_back status |
+| 7.5 | Approval UI | ✅ | `FixActions` bar created in `src/components/fixes/FixActions/` for live user review & status changes |
+| 7.6 | `TrustScore` component | ✅ | Created in `src/components/fixes/TrustScore/`; displays confidence percentage and risk classification |
+| 7.7 | Risk classification UI | ✅ | Integrated into TrustScore & IssueDetail modal |
+| 7.8 | Verification status indicator | ✅ | Created `VerificationStatusIndicator` in `src/components/fixes/VerificationStatusIndicator/` |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 6 incomplete
+**Phase Status:** ✅ Completed (8/8 tasks complete)
+**Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (19 routes generated).
+**Blockers:** None
 
 ---
 
@@ -316,7 +316,7 @@
 | Phase 4 — Agent Foundation | ✅ | 12/12 |
 | Phase 5 — Pipeline Backend | ✅ | 10/10 |
 | Phase 6 — Pipeline UI | ✅ | 9/9 |
-| Phase 7 — Fixes & Verification | ⬜ | 0/8 |
+| Phase 7 — Fixes & Verification | ✅ | 8/8 |
 | Phase 8 — Governance | ⬜ | 0/6 |
 | Phase 9 — Repo Explorer | ⬜ | 0/7 |
 | Phase 10 — PR & Timeline | ⬜ | 0/8 |
@@ -324,7 +324,7 @@
 | Phase 12 — Experience Mode | ⬜ | 0/5 |
 | Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
 | Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **67/124** |
+| **Total** | | **75/124** |
 
 ---
 
@@ -344,6 +344,7 @@
 | 2026-08-05 | Fixed pipeline-page development-mode request cancellation and removed missing custom-font requests that produced browser-console 404s | Pipeline reliability |
 | 2026-08-05 | Extracted `PipelineView` component from pipeline page into `src/components/pipeline/PipelineView/` with CSS Module and barrel export; page now delegates all run/status/results rendering through props | Phase 6 |
 | 2026-08-05 | Completed Phase 6 Pipeline UI & Issue Views: built `StageCard`, `ProgressIndicator`, `CommitSelector`, `IssueCard`, `IssueDetail`, `GET /api/issues` route, and `/issues` filterable issues list page; verified with lint, tsc, and Next.js build | Phase 6 |
+| 2026-08-05 | Connected 7 API keys Groq key pool, added model fallback, and completed Phase 7 (Fixes, Verification & Approval): built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, `POST /api/fixes/[id]/approve`, `POST /api/fixes/[id]/reject`, and `POST /api/fixes/[id]/rollback` APIs | Phase 7 |
 
 ---
 

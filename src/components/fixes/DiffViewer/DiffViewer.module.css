@@ -1,0 +1,53 @@
+.container {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-base);
+  overflow: hidden;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.825rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.filename {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.diffContent {
+  padding: 0.75rem 1rem;
+  margin: 0;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.line {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.added {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.removed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.headerLine {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.normal {
+  color: var(--color-text-secondary);
+}
