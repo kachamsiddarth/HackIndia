@@ -237,18 +237,18 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 11.1 | Sarvam client | ⬜ | |
-| 11.2 | Chat API | ⬜ | |
-| 11.3 | Voice API | ⬜ | |
-| 11.4 | `SarvamAssistantAgent` | ⬜ | |
-| 11.5 | `ChatPanel` component | ⬜ | |
-| 11.6 | `VoiceInput` component | ⬜ | |
-| 11.7 | Context injection | ⬜ | |
-| 11.8 | Language selection | ⬜ | |
+| 11.1 | Sarvam client | ✅ | Built `src/lib/sarvam/client.ts` with translate, STT, TTS methods |
+| 11.2 | Chat API | ✅ | Built `GET/POST /api/chat` with Groq AI backend and Sarvam translation |
+| 11.3 | Voice API | ✅ | Built `POST /api/voice` with Sarvam STT and TTS |
+| 11.4 | `SarvamAssistantAgent` | ✅ | Built `src/agents/sarvam-assistant-agent.ts` with context-aware responses |
+| 11.5 | `ChatPanel` component | ✅ | Integrated into `/assistant` page with message history and typing indicator |
+| 11.6 | `VoiceInput` component | ✅ | Mic recording with Sarvam STT + Web Speech API fallback |
+| 11.7 | Context injection | ✅ | Project data, issues, and scores injected into AI system prompt |
+| 11.8 | Language selection | ✅ | 11 Indian language selector with auto-translation via Sarvam |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 10 incomplete
+**Phase Status:** ✅ Completed (8/8 tasks complete)
+**Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (28 routes generated).
+**Blockers:** None
 
 ---
 
@@ -320,11 +320,11 @@
 | Phase 8 — Governance | ✅ | 6/6 |
 | Phase 9 — Repo Explorer | ✅ | 7/7 |
 | Phase 10 — PR & Timeline | ✅ | 8/8 |
-| Phase 11 — Sarvam Assistant | ⬜ | 0/8 |
+| Phase 11 — Sarvam Assistant | ✅ | 8/8 |
 | Phase 12 — Experience Mode | ⬜ | 0/5 |
 | Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
 | Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **96/124** |
+| **Total** | | **104/124** |
 
 ---
 
@@ -349,6 +349,7 @@
 | 2026-08-05 | Completed Phase 9 (Repository Explorer & Code Diffs): built `GET /api/projects/[id]/files`, `GET /api/projects/[id]/files/content`, `FileExplorer` component, `CodeBlock` component with inline WCAG annotations, `/projects/[id]/explorer` page, and `/projects/[id]/diff` unified diff viewer page; verified with lint, tsc, and Next.js build | Phase 9 |
 | 2026-08-05 | Completed Phase 10 (Pull Requests & Timeline): built `POST /api/pull-requests/create`, `GET /api/pull-requests`, `PRPanel` component, `GET /api/projects/[id]/timeline`, `TimelineChart`, `ScoreGauge`, and `/projects/[id]/timeline` page; verified with lint, tsc, and Next.js build (25 routes) | Phase 10 |
 | 2026-08-05 | Resolved pipeline execution errors: enforced required `'json'` keyword in system prompts for `json_object` format, enabled active multi-key rotation across all 7 Groq API keys on 429 TPD limit errors, and sanitized raw error JSON in timeline UI | Fixes |
+| 2026-08-05 | Completed Phase 11 (Sarvam AI Assistant): integrated Sarvam API key, built `src/lib/sarvam/client.ts`, `/api/chat` route, `/api/voice` route, `SarvamAssistantAgent`, and `/assistant` dashboard page supporting 11 Indian languages, voice input, context injection, and chat history; verified build (28 routes) | Phase 11 |
 
 ---
 
