@@ -1,0 +1,98 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background: var(--color-bg-base);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font-size: 0.85rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.filePath {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.codeArea {
+  flex: 1;
+  overflow: auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+.lineRow {
+  display: flex;
+  flex-direction: column;
+}
+
+.lineContent {
+  display: flex;
+  min-width: 100%;
+}
+
+.lineContent:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lineContent.hasIssue {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.lineNumber {
+  width: 3.5rem;
+  padding: 0 0.75rem;
+  text-align: right;
+  color: #484f58;
+  user-select: none;
+  border-right: 1px solid #21262d;
+  flex-shrink: 0;
+}
+
+.lineText {
+  padding: 0 0.75rem;
+  white-space: pre;
+  flex: 1;
+}
+
+.annotation {
+  margin: 0.25rem 1rem 0.25rem 4rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: #fca5a5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.annotationHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.ruleBadge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: #ef4444;
+  color: #fff;
+  font-weight: 700;
+}

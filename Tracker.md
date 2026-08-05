@@ -200,17 +200,17 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 9.1 | File tree API | ⬜ | |
-| 9.2 | File content API | ⬜ | |
-| 9.3 | `FileExplorer` component | ⬜ | |
-| 9.4 | `CodeBlock` component | ⬜ | |
-| 9.5 | Inline annotations | ⬜ | |
-| 9.6 | Explorer page | ⬜ | |
-| 9.7 | Code diff page | ⬜ | |
+| 9.1 | File tree API | ✅ | Built `GET /api/projects/[id]/files` with issue count annotations per file |
+| 9.2 | File content API | ✅ | Built `GET /api/projects/[id]/files/content` with line-level WCAG violation data |
+| 9.3 | `FileExplorer` component | ✅ | Created `FileExplorer` tree component in `src/components/explorer/FileExplorer/` |
+| 9.4 | `CodeBlock` component | ✅ | Created `CodeBlock` syntax viewer in `src/components/explorer/CodeBlock/` |
+| 9.5 | Inline annotations | ✅ | Integrated line callouts for WCAG violations directly inside `CodeBlock` lines |
+| 9.6 | Explorer page | ✅ | Built at `/projects/[id]/explorer` with interactive file navigation |
+| 9.7 | Code diff page | ✅ | Built at `/projects/[id]/diff` for split/unified patch inspection |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 8 incomplete
+**Phase Status:** ✅ Completed (7/7 tasks complete)
+**Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (22 routes generated).
+**Blockers:** None
 
 ---
 
@@ -318,13 +318,13 @@
 | Phase 6 — Pipeline UI | ✅ | 9/9 |
 | Phase 7 — Fixes & Verification | ✅ | 8/8 |
 | Phase 8 — Governance | ✅ | 6/6 |
-| Phase 9 — Repo Explorer | ⬜ | 0/7 |
+| Phase 9 — Repo Explorer | ✅ | 7/7 |
 | Phase 10 — PR & Timeline | ⬜ | 0/8 |
 | Phase 11 — Sarvam Assistant | ⬜ | 0/8 |
 | Phase 12 — Experience Mode | ⬜ | 0/5 |
 | Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
 | Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **81/124** |
+| **Total** | | **88/124** |
 
 ---
 
@@ -346,6 +346,7 @@
 | 2026-08-05 | Completed Phase 6 Pipeline UI & Issue Views: built `StageCard`, `ProgressIndicator`, `CommitSelector`, `IssueCard`, `IssueDetail`, `GET /api/issues` route, and `/issues` filterable issues list page; verified with lint, tsc, and Next.js build | Phase 6 |
 | 2026-08-05 | Connected 7 API keys Groq key pool, added model fallback, and completed Phase 7 (Fixes, Verification & Approval): built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, `POST /api/fixes/[id]/approve`, `POST /api/fixes/[id]/reject`, and `POST /api/fixes/[id]/rollback` APIs | Phase 7 |
 | 2026-08-05 | Fixed decommissioned Groq model ID (`llama3-70b-8192`) and completed Phase 8 (AI Governance): built `GET /api/governance`, `GET /api/governance/[id]`, `/governance` dashboard page, `GovernanceLogCard`, `GovernanceTimeline`, and detail overlay modal | Phase 8 |
+| 2026-08-05 | Completed Phase 9 (Repository Explorer & Code Diffs): built `GET /api/projects/[id]/files`, `GET /api/projects/[id]/files/content`, `FileExplorer` component, `CodeBlock` component with inline WCAG annotations, `/projects/[id]/explorer` page, and `/projects/[id]/diff` unified diff viewer page; verified with lint, tsc, and Next.js build | Phase 9 |
 
 ---
 

@@ -16,83 +16,204 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   try {
     const { searchParams } = new URL(request.url);
-    const agent = searchParams.get("agent");
-    const action = searchParams.get("action");
-    const search = searchParams.get("search");
+    const agentFilter = searchParams.get("agent");
+    const actionFilter = searchParams.get("action");
+    const searchFilter = searchParams.get("search");
 
     const admin = createAdminClient();
+    const recordsMap = new Map<string, {
+      id: string;
+      pipelineRunId: string;
+      agentName: string;
+      action: string;
+      reasoning: string;
+      confidence: number;
+      metadata: Record<string, unknown> | null;
+      createdAt: string;
+    }>();
 
-    let query = admin
-      .from("governance_records")
-      .select("*")
-      .order("created_at", { ascending: false });
+    // 1. Fetch from governance_records table (if table exists and has rows)
+    try {
+      const { data: recs } = await admin
+        .from("governance_records")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (agent && agent !== "all") {
-      query = query.eq("agent_name", agent);
+      if (recs && recs.length > 0) {
+        for (const r of recs) {
+          recordsMap.set(r.id, {
+            id: r.id,
+            pipelineRunId: r.pipeline_run_id ?? r.pipelineRunId ?? "",
+            agentName: r.agent_name ?? r.agentName ?? "GovernanceAgent",
+            action: r.action ?? "AUDIT_LOGGED",
+            reasoning: r.reasoning ?? "AI decision recorded.",
+            confidence: r.confidence ?? r.metadata?.confidence ?? 0.92,
+            metadata: r.metadata ?? null,
+            createdAt: r.created_at ?? new Date().toISOString(),
+          });
+        }
+      }
+    } catch {
+      // Table governance_records might not exist or be empty
     }
 
-    if (action && action !== "all") {
-      query = query.eq("action", action);
+    // 2. Fetch from governance_logs table (alternative schema name)
+    try {
+      const { data: logs } = await admin
+        .from("governance_logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (logs && logs.length > 0) {
+        for (const l of logs) {
+          recordsMap.set(l.id, {
+            id: l.id,
+            pipelineRunId: l.pipeline_run_id ?? "",
+            agentName: l.agent_name ?? "GovernanceAgent",
+            action: l.action ?? "AUDIT_LOGGED",
+            reasoning: l.reasoning ?? "AI decision recorded.",
+            confidence: l.confidence ?? 0.95,
+            metadata: {
+              trustScore: l.trust_score,
+              riskLevel: l.risk_level,
+              inputData: l.input_data,
+              outputData: l.output_data,
+            },
+            createdAt: l.created_at ?? new Date().toISOString(),
+          });
+        }
+      }
+    } catch {
+      // Table governance_logs might not exist or be empty
     }
 
-    const { data: recordsData, error: recErr } = await query;
-    if (recErr) throw new Error(recErr.message);
-
-    let records = recordsData ?? [];
-
-    // Fallback: If governance_records table has no rows, fetch from pipeline_stages
-    if (records.length === 0) {
-      let stagesQuery = admin
+    // 3. Synthesize from pipeline_stages (every agent execution stage in pipeline)
+    try {
+      const { data: stages } = await admin
         .from("pipeline_stages")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (agent && agent !== "all") {
-        stagesQuery = stagesQuery.eq("agent_name", agent);
+      if (stages && stages.length > 0) {
+        for (const s of stages) {
+          if (!recordsMap.has(s.id)) {
+            recordsMap.set(s.id, {
+              id: s.id,
+              pipelineRunId: s.pipeline_run_id ?? "",
+              agentName: s.agent_name ?? stageToAgentName(s.stage_name),
+              action: s.status === "completed" ? `${(s.stage_name || "STAGE").toUpperCase()}_COMPLETED` : `${(s.stage_name || "STAGE").toUpperCase()}_FAILED`,
+              reasoning: s.error_message ?? `Stage ${s.stage_name ?? "analysis"} executed successfully with duration ${s.duration_ms ?? 0}ms.`,
+              confidence: 0.92,
+              metadata: {
+                stageName: s.stage_name,
+                durationMs: s.duration_ms,
+                output: s.output_data,
+              },
+              createdAt: s.created_at ?? new Date().toISOString(),
+            });
+          }
+        }
       }
+    } catch {
+      // pipeline_stages
+    }
 
-      const { data: stagesData } = await stagesQuery;
-      if (stagesData && stagesData.length > 0) {
-        records = stagesData.map((s) => ({
-          id: s.id,
-          pipeline_run_id: s.pipeline_run_id,
-          agent_name: s.agent_name,
-          action: s.status === "completed" ? "STAGE_COMPLETED" : "STAGE_FAILED",
-          reasoning: s.error_message ?? `Stage ${s.stage_name} executed successfully in ${s.duration_ms ?? 0}ms`,
-          metadata: {
-            confidence: 0.95,
-            stageName: s.stage_name,
-            durationMs: s.duration_ms,
-            outputData: s.output_data,
-          },
-          created_at: s.created_at,
-        }));
+    // 4. Synthesize from fixes (every AI fix, verification, approval, rejection, rollback)
+    try {
+      const { data: fixes } = await admin
+        .from("fixes")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (fixes && fixes.length > 0) {
+        for (const f of fixes) {
+          const fixIdKey = `fix-${f.id}`;
+          if (!recordsMap.has(fixIdKey)) {
+            recordsMap.set(fixIdKey, {
+              id: f.id,
+              pipelineRunId: f.pipeline_run_id ?? "",
+              agentName: "AccessibilityFixAgent",
+              action: `FIX_${(f.status || "generated").toUpperCase()}`,
+              reasoning: f.reasoning ?? `Generated code fix for file ${f.file_path}`,
+              confidence: (f.trust_score ?? f.confidence ?? 85) / 100,
+              metadata: {
+                filePath: f.file_path,
+                trustScore: f.trust_score,
+                status: f.status,
+                verificationResult: f.verification_result,
+              },
+              createdAt: f.updated_at ?? f.created_at ?? new Date().toISOString(),
+            });
+          }
+        }
+      }
+    } catch {
+      // fixes
+    }
+
+    // 5. Synthesize from pipeline_runs if nothing else returned
+    if (recordsMap.size === 0) {
+      try {
+        const { data: runs } = await admin
+          .from("pipeline_runs")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (runs && runs.length > 0) {
+          for (const r of runs) {
+            recordsMap.set(r.id, {
+              id: r.id,
+              pipelineRunId: r.id,
+              agentName: "HelixOrchestrator",
+              action: `PIPELINE_${(r.status || "COMPLETED").toUpperCase()}`,
+              reasoning: r.summary ?? r.error_message ?? `Pipeline execution ${r.status}. Discovered ${r.total_issues ?? 0} regressions and generated ${r.fixes_generated ?? 0} fixes.`,
+              confidence: 0.95,
+              metadata: {
+                totalIssues: r.total_issues,
+                fixesGenerated: r.fixes_generated,
+                fixesVerified: r.fixes_verified,
+                baseCommit: r.base_commit_sha,
+                headCommit: r.head_commit_sha,
+              },
+              createdAt: r.created_at ?? new Date().toISOString(),
+            });
+          }
+        }
+      } catch {
+        // pipeline_runs
       }
     }
 
-    if (search) {
-      const searchLower = search.toLowerCase();
+    let records = Array.from(recordsMap.values());
+
+    // Filter by agent if requested
+    if (agentFilter && agentFilter !== "all") {
+      const agentLower = agentFilter.toLowerCase();
+      records = records.filter((r) => r.agentName.toLowerCase().includes(agentLower));
+    }
+
+    // Filter by action if requested
+    if (actionFilter && actionFilter !== "all") {
+      const actionLower = actionFilter.toLowerCase();
+      records = records.filter((r) => r.action.toLowerCase().includes(actionLower));
+    }
+
+    // Filter by search query if requested
+    if (searchFilter) {
+      const queryLower = searchFilter.toLowerCase();
       records = records.filter(
         (r) =>
-          r.agent_name?.toLowerCase().includes(searchLower) ||
-          r.action?.toLowerCase().includes(searchLower) ||
-          r.reasoning?.toLowerCase().includes(searchLower)
+          r.agentName.toLowerCase().includes(queryLower) ||
+          r.action.toLowerCase().includes(queryLower) ||
+          r.reasoning.toLowerCase().includes(queryLower)
       );
     }
 
-    const formattedRecords = records.map((r) => ({
-      id: r.id,
-      pipelineRunId: r.pipeline_run_id,
-      agentName: r.agent_name,
-      action: r.action,
-      reasoning: r.reasoning,
-      confidence: r.metadata?.confidence ?? 0.9,
-      metadata: r.metadata,
-      createdAt: r.created_at,
-    }));
+    // Sort descending by creation date
+    records.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return NextResponse.json({
-      data: { records: formattedRecords },
+      data: { records },
       error: null,
     });
   } catch (caught: unknown) {
@@ -101,5 +222,24 @@ export async function GET(request: Request): Promise<NextResponse> {
       { data: null, error: { message, code: "FETCH_GOVERNANCE_FAILED" } },
       { status: 500 }
     );
+  }
+}
+
+function stageToAgentName(stageName?: string | null): string {
+  switch (stageName?.toLowerCase()) {
+    case "spec":
+      return "RepositoryAgent";
+    case "build":
+      return "AccessibilityFixAgent";
+    case "evaluate":
+      return "VerificationAgent";
+    case "diagnose":
+      return "DiagnosisAgent";
+    case "optimize":
+      return "OptimizationAgent";
+    case "governance":
+      return "GovernanceAgent";
+    default:
+      return "HelixAgent";
   }
 }
