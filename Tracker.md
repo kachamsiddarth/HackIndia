@@ -218,18 +218,18 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 10.1 | PR creation API | ⬜ | |
-| 10.2 | PR list API | ⬜ | |
-| 10.3 | PR creation UI | ⬜ | |
-| 10.4 | PR body generation | ⬜ | |
-| 10.5 | Timeline API | ⬜ | |
-| 10.6 | `TimelineChart` component | ⬜ | |
-| 10.7 | `ScoreGauge` component | ⬜ | |
-| 10.8 | Timeline page | ⬜ | |
+| 10.1 | PR creation API | ✅ | Built `POST /api/pull-requests/create` creating GitHub PRs and storing records |
+| 10.2 | PR list API | ✅ | Built `GET /api/pull-requests` fetching user PRs with project filter |
+| 10.3 | PR creation UI | ✅ | Created `PRPanel` component in `src/components/pull-requests/PRPanel/` |
+| 10.4 | PR body generation | ✅ | Automated markdown PR body generation with WCAG compliance details |
+| 10.5 | Timeline API | ✅ | Built `GET /api/projects/[id]/timeline` fetching compliance scores and execution runs |
+| 10.6 | `TimelineChart` component | ✅ | Created `TimelineChart` component in `src/components/timeline/TimelineChart/` |
+| 10.7 | `ScoreGauge` component | ✅ | Created `ScoreGauge` SVG circular indicator in `src/components/timeline/ScoreGauge/` |
+| 10.8 | Timeline page | ✅ | Built at `/projects/[id]/timeline` for score progression and PR management |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 9 incomplete
+**Phase Status:** ✅ Completed (8/8 tasks complete)
+**Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (25 routes generated).
+**Blockers:** None
 
 ---
 
@@ -319,12 +319,12 @@
 | Phase 7 — Fixes & Verification | ✅ | 8/8 |
 | Phase 8 — Governance | ✅ | 6/6 |
 | Phase 9 — Repo Explorer | ✅ | 7/7 |
-| Phase 10 — PR & Timeline | ⬜ | 0/8 |
+| Phase 10 — PR & Timeline | ✅ | 8/8 |
 | Phase 11 — Sarvam Assistant | ⬜ | 0/8 |
 | Phase 12 — Experience Mode | ⬜ | 0/5 |
 | Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
 | Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **88/124** |
+| **Total** | | **96/124** |
 
 ---
 
@@ -347,6 +347,7 @@
 | 2026-08-05 | Connected 7 API keys Groq key pool, added model fallback, and completed Phase 7 (Fixes, Verification & Approval): built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, `POST /api/fixes/[id]/approve`, `POST /api/fixes/[id]/reject`, and `POST /api/fixes/[id]/rollback` APIs | Phase 7 |
 | 2026-08-05 | Fixed decommissioned Groq model ID (`llama3-70b-8192`) and completed Phase 8 (AI Governance): built `GET /api/governance`, `GET /api/governance/[id]`, `/governance` dashboard page, `GovernanceLogCard`, `GovernanceTimeline`, and detail overlay modal | Phase 8 |
 | 2026-08-05 | Completed Phase 9 (Repository Explorer & Code Diffs): built `GET /api/projects/[id]/files`, `GET /api/projects/[id]/files/content`, `FileExplorer` component, `CodeBlock` component with inline WCAG annotations, `/projects/[id]/explorer` page, and `/projects/[id]/diff` unified diff viewer page; verified with lint, tsc, and Next.js build | Phase 9 |
+| 2026-08-05 | Completed Phase 10 (Pull Requests & Timeline): built `POST /api/pull-requests/create`, `GET /api/pull-requests`, `PRPanel` component, `GET /api/projects/[id]/timeline`, `TimelineChart`, `ScoreGauge`, and `/projects/[id]/timeline` page; verified with lint, tsc, and Next.js build (25 routes) | Phase 10 |
 
 ---
 
