@@ -183,16 +183,16 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 8.1 | Governance logs API | ⬜ | |
-| 8.2 | Governance detail API | ⬜ | |
-| 8.3 | Governance page | ⬜ | |
-| 8.4 | Governance log card | ⬜ | |
-| 8.5 | Governance timeline | ⬜ | |
-| 8.6 | Rollback from governance | ⬜ | |
+| 8.1 | Governance logs API | ✅ | Built `GET /api/governance` supporting agent, action, and search filtering |
+| 8.2 | Governance detail API | ✅ | Built `GET /api/governance/[id]` for inspecting decision metadata & reasoning |
+| 8.3 | Governance page | ✅ | Built at `/governance` with search, filter controls, card/timeline toggle, and detail modal |
+| 8.4 | Governance log card | ✅ | Created `GovernanceLogCard` in `src/components/governance/GovernanceLogCard/` |
+| 8.5 | Governance timeline | ✅ | Created `GovernanceTimeline` in `src/components/governance/GovernanceTimeline/` |
+| 8.6 | Rollback from governance | ✅ | Integrated fix detail overlay linking fix audit records to `POST /api/fixes/[id]/rollback` |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 7 incomplete
+**Phase Status:** ✅ Completed (6/6 tasks complete)
+**Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (20 routes generated).
+**Blockers:** None
 
 ---
 
@@ -317,14 +317,14 @@
 | Phase 5 — Pipeline Backend | ✅ | 10/10 |
 | Phase 6 — Pipeline UI | ✅ | 9/9 |
 | Phase 7 — Fixes & Verification | ✅ | 8/8 |
-| Phase 8 — Governance | ⬜ | 0/6 |
+| Phase 8 — Governance | ✅ | 6/6 |
 | Phase 9 — Repo Explorer | ⬜ | 0/7 |
 | Phase 10 — PR & Timeline | ⬜ | 0/8 |
 | Phase 11 — Sarvam Assistant | ⬜ | 0/8 |
 | Phase 12 — Experience Mode | ⬜ | 0/5 |
 | Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
 | Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **75/124** |
+| **Total** | | **81/124** |
 
 ---
 
@@ -345,6 +345,7 @@
 | 2026-08-05 | Extracted `PipelineView` component from pipeline page into `src/components/pipeline/PipelineView/` with CSS Module and barrel export; page now delegates all run/status/results rendering through props | Phase 6 |
 | 2026-08-05 | Completed Phase 6 Pipeline UI & Issue Views: built `StageCard`, `ProgressIndicator`, `CommitSelector`, `IssueCard`, `IssueDetail`, `GET /api/issues` route, and `/issues` filterable issues list page; verified with lint, tsc, and Next.js build | Phase 6 |
 | 2026-08-05 | Connected 7 API keys Groq key pool, added model fallback, and completed Phase 7 (Fixes, Verification & Approval): built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, `POST /api/fixes/[id]/approve`, `POST /api/fixes/[id]/reject`, and `POST /api/fixes/[id]/rollback` APIs | Phase 7 |
+| 2026-08-05 | Fixed decommissioned Groq model ID (`llama3-70b-8192`) and completed Phase 8 (AI Governance): built `GET /api/governance`, `GET /api/governance/[id]`, `/governance` dashboard page, `GovernanceLogCard`, `GovernanceTimeline`, and detail overlay modal | Phase 8 |
 
 ---
 
