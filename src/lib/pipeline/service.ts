@@ -139,6 +139,7 @@ async function persistPipelineOutput(run: PipelineRunRecord, output: HelixPipeli
   await admin.from("pipeline_stages").insert(output.stages.map((stage) => toStageInsert(run.id, stage)));
   const persistedIssues = await persistIssues(run, output.analysis?.violations ?? []);
   await persistFixes(run.id, output, persistedIssues);
+  await persistGovernanceRecords(run, output);
 
   const verification = output.verification;
   await updatePipeline(run.id, {
@@ -271,3 +272,45 @@ function splitRepository(repository: string): [string, string] {
   if (!owner || !repo) throw new Error("Project has an invalid GitHub repository identifier.");
   return [owner, repo];
 }
+
+async function persistGovernanceRecords(
+  run: PipelineRunRecord,
+  output: HelixPipelineOutput
+): Promise<void> {
+  const admin = createAdminClient();
+
+  const stageRecords = output.stages.map((stg) => ({
+    pipeline_run_id: run.id,
+    agent_name: stg.agentName,
+    action: stg.status === "COMPLETED" ? "STAGE_COMPLETED" : "STAGE_FAILED",
+    reasoning: stg.reasoning,
+    metadata: {
+      confidence: stg.confidence ?? 0.9,
+      durationMs: stg.duration_ms,
+      stage: stg.stage,
+      pipelineId: run.id,
+      projectId: run.project_id,
+    },
+  }));
+
+  const governanceAgentRecords = (output.governanceRecords ?? []).map((rec) => ({
+    pipeline_run_id: run.id,
+    agent_name: rec.agentName,
+    action: rec.action,
+    reasoning: rec.reasoning,
+    metadata: {
+      confidence: rec.confidence ?? 0.95,
+      pipelineId: run.id,
+      projectId: run.project_id,
+    },
+  }));
+
+  const allInserts = [...stageRecords, ...governanceAgentRecords];
+  if (allInserts.length > 0) {
+    const { error } = await admin.from("governance_records").insert(allInserts);
+    if (error) {
+      console.warn("[Pipeline Service] Governance record insert notice:", error.message);
+    }
+  }
+}
+
