@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { GitHubClient } from "@/lib/github/client";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 
+interface FixRecord {
+  id: string;
+  file_path: string;
+  before_code: string | null;
+  after_code: string | null;
+  diff_patch: string | null;
+  status: string;
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
   const supabase = await createClient();
   const {
@@ -47,15 +56,15 @@ export async function POST(request: Request): Promise<NextResponse> {
       .single();
     if (!dbUser?.github_token) throw new Error("GitHub OAuth token missing.");
 
-    // Fetch all generated/verified fixes for this pipeline run
+    // Fetch ALL fixes for this pipeline run (not just approved — include generated/verified)
     const { data: fixes } = await admin
       .from("fixes")
       .select("id, file_path, before_code, after_code, diff_patch, status")
       .eq("pipeline_run_id", pipelineRunId);
 
-    const availableFixes = fixes ?? [];
+    const availableFixes: FixRecord[] = (fixes ?? []) as FixRecord[];
     if (availableFixes.length === 0) {
-      throw new Error("No accessibility fixes found for this pipeline run.");
+      throw new Error("No accessibility fixes found for this pipeline run. Run the pipeline first.");
     }
 
     // Fetch issues count
@@ -69,56 +78,83 @@ export async function POST(request: Request): Promise<NextResponse> {
     const baseBranch = project.default_branch || "main";
     const branchName = directCommit ? baseBranch : `accessdiff/fixes-${pipelineRunId.slice(0, 8)}`;
 
-    // 1. Get base branch SHA
+    // Step 1: Get base branch SHA
     const baseSha = await github.getBranchRef(owner, repo, baseBranch);
 
-    // 2. If creating a PR, ensure the target branch exists
+    // Step 2: If creating a PR branch, ensure the branch exists
     if (!directCommit) {
       await github.createBranch(owner, repo, branchName, baseSha);
     }
 
-    // 3. Apply fixes to the files on GitHub
-    const fileFixMap = new Map<string, string>();
+    // Step 3: Group fixes by file_path so we can apply ALL fixes to each file
+    const fixesByFile = new Map<string, FixRecord[]>();
     for (const fix of availableFixes) {
-      if (fix.file_path && fix.after_code) {
-        fileFixMap.set(fix.file_path, fix.after_code);
-      }
+      if (!fix.file_path || (!fix.before_code && !fix.after_code)) continue;
+      const existing = fixesByFile.get(fix.file_path) || [];
+      existing.push(fix);
+      fixesByFile.set(fix.file_path, existing);
     }
 
+    if (fixesByFile.size === 0) {
+      throw new Error("No fixes with valid before_code/after_code found. The pipeline may need to be re-run.");
+    }
+
+    // Step 4: For each file, fetch original content from GitHub, apply ALL fixes, commit
     const modifiedFilesList: string[] = [];
 
-    for (const [filePath, afterCode] of fileFixMap.entries()) {
-      let finalContent = afterCode;
-
-      // If afterCode is just a partial snippet, merge it with original file content from GitHub
+    for (const [filePath, fileFixes] of fixesByFile.entries()) {
+      // Fetch the original file content from GitHub
+      let originalContent: string;
       try {
-        const originalContent = await github.getFileContent(owner, repo, filePath, baseBranch);
-        if (originalContent && !afterCode.includes("<!DOCTYPE") && !afterCode.includes("<html")) {
-          // If original contains file structure, substitute the code
-          const fix = availableFixes.find((f) => f.file_path === filePath);
-          if (fix?.before_code && originalContent.includes(fix.before_code)) {
-            finalContent = originalContent.replace(fix.before_code, afterCode);
-          } else if (originalContent.length > afterCode.length && !afterCode.includes("<")) {
-            finalContent = originalContent; // fallback if invalid snippet
-          }
-        }
+        originalContent = await github.getFileContent(owner, repo, filePath, baseBranch);
       } catch {
-        // File may be new or unreadable, use afterCode directly
+        console.warn(`[PR API] Could not fetch original file ${filePath} from GitHub. Skipping.`);
+        continue;
       }
 
-      await github.createOrUpdateFile(
-        owner,
-        repo,
-        filePath,
-        finalContent,
-        `fix(accessibility): resolve WCAG 2.2 AA violations in ${filePath} via AccessDiff`,
-        branchName
-      );
+      // Apply each fix's before_code → after_code replacement sequentially
+      let mergedContent = originalContent;
+      let appliedCount = 0;
 
-      modifiedFilesList.push(filePath);
+      for (const fix of fileFixes) {
+        if (fix.before_code && fix.after_code) {
+          // Check if the before_code snippet exists in the current content
+          if (mergedContent.includes(fix.before_code)) {
+            mergedContent = mergedContent.replace(fix.before_code, fix.after_code);
+            appliedCount++;
+          } else {
+            // Try trimmed match (whitespace differences)
+            const trimmedBefore = fix.before_code.trim();
+            if (trimmedBefore && mergedContent.includes(trimmedBefore)) {
+              mergedContent = mergedContent.replace(trimmedBefore, fix.after_code.trim());
+              appliedCount++;
+            }
+          }
+        }
+      }
+
+      // Only commit if we actually changed something
+      if (appliedCount > 0 && mergedContent !== originalContent) {
+        await github.createOrUpdateFile(
+          owner,
+          repo,
+          filePath,
+          mergedContent,
+          `fix(accessibility): apply ${appliedCount} WCAG 2.2 AA fixes to ${filePath} via AccessDiff`,
+          branchName
+        );
+        modifiedFilesList.push(filePath);
+      }
     }
 
-    // 4. Build PR body
+    if (modifiedFilesList.length === 0) {
+      throw new Error(
+        "Could not apply any fixes — the before_code snippets did not match the current file content on GitHub. " +
+        "This can happen if the repository was modified after the pipeline ran. Try re-running the pipeline."
+      );
+    }
+
+    // Step 5: Build PR body
     const prBody =
       customBody ||
       generatePRBody({
@@ -130,8 +166,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     let prUrl = `https://github.com/${owner}/${repo}/commits/${branchName}`;
     let prNumber = 0;
-    let prState = "open";
+    let prState = directCommit ? "merged" : "open";
 
+    // Step 6: Create PR (if not direct commit)
     if (!directCommit) {
       try {
         const pr = await github.createPullRequest(owner, repo, {
@@ -152,9 +189,12 @@ export async function POST(request: Request): Promise<NextResponse> {
           throw err;
         }
       }
+    } else {
+      // Direct commit — link to the commit history
+      prUrl = `https://github.com/${owner}/${repo}/commits/${baseBranch}`;
     }
 
-    // 5. Persist PR record in database
+    // Step 7: Persist PR record in database
     const { data: prRecord, error: insertErr } = await admin
       .from("pull_requests")
       .insert({
@@ -186,6 +226,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         filesModified: modifiedFilesList.length,
         issuesAddressed: issues?.length ?? 0,
         branchName,
+        appliedFiles: modifiedFilesList,
       },
       error: null,
     });
@@ -213,20 +254,27 @@ function generatePRBody(opts: {
   issueCount: number;
   files: string[];
 }): string {
-  return `## 🔍 AccessDiff Accessibility Fixes
+  return `## 🔍 AccessDiff — Automated Accessibility Fixes
 
 **Pipeline Run:** \`${opts.pipelineRunId.slice(0, 8)}\`
 
 ### Summary
-- **${opts.issueCount}** accessibility violations detected
-- **${opts.fixCount}** AI-generated fixes applied to GitHub codebase
-- **${opts.files.length}** files updated
+- **${opts.issueCount}** WCAG 2.2 accessibility violations detected
+- **${opts.fixCount}** AI-generated code fixes applied
+- **${opts.files.length}** file(s) updated on GitHub
 
 ### Modified Files
 ${opts.files.map((f) => `- \`${f}\``).join("\n")}
 
+### What Changed
+- Added missing \`alt\` attributes to images
+- Added \`<label>\` elements for form inputs  
+- Added ARIA roles and attributes to interactive elements
+- Fixed heading hierarchy
+- Improved keyboard navigation support
+
 ### WCAG 2.2 AA Compliance
-All code changes address color contrast, ARIA roles/labels, form control accessibility, and keyboard navigation support.
+All changes target Level AA conformance per [WCAG 2.2](https://www.w3.org/TR/WCAG22/).
 
 ---
 *Generated by [AccessDiff](https://github.com/kachamsiddarth/HackIndia) — AI-Powered Accessibility Engineering Platform*
