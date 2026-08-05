@@ -84,6 +84,7 @@ Return a JSON object matching this exact schema:
       systemPrompt: "You are an expert AI repository analysis agent specializing in WCAG accessibility risk audits.",
       responseFormat: { type: "json_object" },
       temperature: 0.2,
+      useFastModel: true,
     });
   }
 }

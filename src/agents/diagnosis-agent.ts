@@ -60,6 +60,7 @@ Return JSON:
         systemPrompt: "You are a specialized diagnostic AI agent analyzing why code mutations failed automated verification tests.",
         responseFormat: { type: "json_object" },
         temperature: 0.1,
+        useFastModel: true,
       });
 
       return {

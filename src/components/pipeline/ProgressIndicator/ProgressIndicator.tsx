@@ -15,35 +15,54 @@ export interface ProgressIndicatorProps {
   currentStageId?: string | null;
 }
 
-const DEFAULT_HELIX_STAGES: Array<{ id: string; label: string }> = [
-  { id: "spec", label: "Spec & Diff" },
-  { id: "build", label: "A11y Analysis" },
-  { id: "evaluate", label: "Verification" },
-  { id: "diagnose", label: "Diagnosis" },
-  { id: "optimize", label: "Optimization" },
+const CANONICAL_STAGES = [
+  { id: "spec", label: "Spec" },
+  { id: "build", label: "Build" },
+  { id: "evaluate", label: "Evaluate" },
+  { id: "diagnose", label: "Diagnose" },
+  { id: "optimize", label: "Optimize" },
+  { id: "governance", label: "Governance" },
 ];
 
 /**
- * Visual ProgressIndicator displaying ADL pipeline steps with progress bar.
+ * Visual ProgressIndicator displaying ADL pipeline stages with progress bar.
+ * Automatically groups raw sub-agent executions into single stage indicators.
  */
 export default function ProgressIndicator({
   steps,
   currentStageId,
 }: ProgressIndicatorProps): ReactNode {
-  const displaySteps = steps.length > 0
-    ? steps
-    : DEFAULT_HELIX_STAGES.map((stage) => {
-        let status: PipelineStatus = "pending";
-        if (currentStageId === stage.id) {
-          status = "running";
-        }
-        return { ...stage, status };
-      });
+  // Map raw sub-agent executions into canonical ADL stages
+  const displaySteps = CANONICAL_STAGES.map((canonical) => {
+    const matchingEvents = steps.filter(
+      (s) => s.label.toLowerCase() === canonical.id.toLowerCase()
+    );
+
+    let status: PipelineStatus = "pending";
+
+    if (matchingEvents.length > 0) {
+      if (matchingEvents.some((e) => e.status === "failed")) {
+        status = "failed";
+      } else if (matchingEvents.some((e) => e.status === "running")) {
+        status = "running";
+      } else if (matchingEvents.every((e) => e.status === "completed")) {
+        status = "completed";
+      } else {
+        status = "running";
+      }
+    } else if (currentStageId?.toLowerCase() === canonical.id.toLowerCase()) {
+      status = "running";
+    }
+
+    return {
+      id: canonical.id,
+      label: canonical.label,
+      status,
+    };
+  });
 
   const completedCount = displaySteps.filter((s) => s.status === "completed").length;
-  const progressPercent = displaySteps.length > 0
-    ? Math.round((completedCount / displaySteps.length) * 100)
-    : 0;
+  const progressPercent = Math.round((completedCount / displaySteps.length) * 100);
 
   return (
     <div className={styles.container} role="region" aria-label="Pipeline progress">

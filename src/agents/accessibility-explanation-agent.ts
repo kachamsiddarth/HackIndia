@@ -52,6 +52,7 @@ Return JSON:
           systemPrompt: "You are an empathetic accessibility educator explaining WCAG guidelines to software engineers.",
           responseFormat: { type: "json_object" },
           temperature: 0.2,
+          useFastModel: true,
         }
       );
 
