@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════════
+   AccessDiff — Global Styles
+   Imports design system, sets base styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Design System Imports */
+@import '../styles/reset.css';
+@import '../styles/tokens.css';
+@import '../styles/typography.css';
+@import '../styles/animations.css';
+
+/* ── Base ── */
+html {
+  height: 100%;
+  color-scheme: dark;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+
+/* ── Links ── */
+a {
+  color: var(--color-accent-text);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Global Focus Styles ── */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ── Selection ── */
+::selection {
+  background: hsla(24, 95%, 53%, 0.3);
+  color: var(--color-text-primary);
+}
+
+/* ── Scrollbar (Webkit) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-default) var(--color-bg-base);
+}
+
+/* ── Skip to Main Content ── */
+.skip-to-main {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  z-index: 9999;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-accent);
+  color: white;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  transition: top var(--duration-fast) var(--ease-out);
+}
+
+.skip-to-main:focus {
+  top: var(--space-4);
+}
+
+/* ── Utility: Visually Hidden ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

@@ -1,0 +1,125 @@
+/* ═══════════════════════════════════════════════════════════════
+   AccessDiff — Typography
+   Font loading, font stacks, and type scale
+   Source of truth: Design.md §3
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Self-hosted Font Loading ──
+   Talina and Gunken can be added later as /public/fonts/ assets.
+   System fallbacks are used until those assets are available. */
+
+/* ── Font Stacks ── */
+:root {
+  /* Display — App name, hero headings */
+  --font-display: 'Talina', Georgia, 'Times New Roman', serif;
+
+  /* Heading — Section headings, feature titles */
+  --font-heading: 'Gunken', 'Arial Black', sans-serif;
+
+  /* Body — All body text, UI elements */
+  --font-body: var(--font-plus-jakarta), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Code — Code blocks, diffs, file paths */
+  --font-mono: var(--font-jetbrains), 'Fira Code', 'Consolas', 'Courier New', monospace;
+}
+
+/* ── Type Scale ── */
+:root {
+  --text-xs:    0.75rem;    /* 12px — Badges, labels */
+  --text-sm:    0.875rem;   /* 14px — Secondary text, captions */
+  --text-base:  1rem;       /* 16px — Body text */
+  --text-lg:    1.125rem;   /* 18px — Emphasized body */
+  --text-xl:    1.25rem;    /* 20px — Card titles */
+  --text-2xl:   1.5rem;     /* 24px — Section headings */
+  --text-3xl:   1.875rem;   /* 30px — Page headings */
+  --text-4xl:   2.25rem;    /* 36px — Hero sub-heading */
+  --text-5xl:   3rem;       /* 48px — Hero heading */
+  --text-6xl:   3.75rem;    /* 60px — Landing page hero */
+
+  /* Line heights */
+  --leading-tight:   1.25;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.75;
+
+  /* Letter spacing */
+  --tracking-tight:  -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.025em;
+
+  /* Font weights */
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+}
+
+/* ── Base Typography ── */
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  letter-spacing: var(--tracking-normal);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  font-weight: var(--weight-semibold);
+}
+
+h1 {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+h5 {
+  font-size: var(--text-lg);
+}
+
+h6 {
+  font-size: var(--text-base);
+}
+
+/* Paragraphs */
+p {
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+/* Small text */
+small {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* Code */
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+pre {
+  overflow-x: auto;
+}
+
+/* Strong */
+strong {
+  font-weight: var(--weight-semibold);
+}

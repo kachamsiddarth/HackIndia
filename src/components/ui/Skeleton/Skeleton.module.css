@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════════
+   AccessDiff — Skeleton Component
+   Loading placeholders with animated shimmer effect
+   ═══════════════════════════════════════════════════════════════ */
+
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 25%,
+    var(--color-bg-hover) 37%,
+    var(--color-bg-elevated) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.6s var(--ease-default) infinite;
+}
+
+.text {
+  height: 1em;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5em;
+}
+
+.circular {
+  border-radius: var(--radius-full);
+}
+
+.rectangular {
+  border-radius: var(--radius-md);
+}

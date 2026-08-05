@@ -1,0 +1,73 @@
+/* ═══════════════════════════════════════════════════════════════
+   AccessDiff — Header Component Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+.header {
+  height: var(--header-height);
+  position: sticky;
+  top: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  z-index: 90;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.crumbItem {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+}
+
+.crumbItem:hover {
+  color: var(--color-text-primary);
+}
+
+.crumbActive {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.separator {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  transition:
+    background var(--duration-fast) var(--ease-default),
+    color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default);
+}
+
+.iconButton:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+}

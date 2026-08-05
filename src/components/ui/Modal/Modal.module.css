@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════
+   AccessDiff — Modal Component
+   Accessible dialog overlay with backdrop and focus trap support
+   ═══════════════════════════════════════════════════════════════ */
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(13, 14, 20, 0.8);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: backdropFadeIn var(--duration-normal) var(--ease-out);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: scaleIn var(--duration-normal) var(--ease-spring);
+}
+
+.modalSm {
+  max-width: 400px;
+}
+
+.modalLg {
+  max-width: 720px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--leading-tight);
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
+}
+
+.closeButton:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.body {
+  padding: var(--space-6);
+  overflow-y: auto;
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-bg-elevated);
+  border-top: 1px solid var(--color-border-subtle);
+}

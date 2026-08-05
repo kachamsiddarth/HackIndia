@@ -1,0 +1,103 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-top: 0.5rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.description {
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.metaCard {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metaLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+.metaValue {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
+  word-break: break-all;
+}
+
+.codeBlock {
+  margin: 0;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border-default);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.patchBlock {
+  margin: 0;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: hsl(230, 21%, 5%);
+  border: 1px solid var(--color-border-default);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.wcagLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-accent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.wcagLink:hover {
+  text-decoration: underline;
+}
+
+.fixHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

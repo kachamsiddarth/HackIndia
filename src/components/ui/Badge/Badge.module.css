@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════════════
+   AccessDiff — Badge Component
+   Severity badges, status badges, generic badges
+   ═══════════════════════════════════════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+  white-space: nowrap;
+  animation: badgeScaleIn var(--duration-normal) var(--ease-spring);
+}
+
+/* ── Dot indicator ── */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+/* ═══════════════ SEVERITY VARIANTS ═══════════════ */
+
+.critical {
+  background: var(--color-error-muted);
+  color: var(--color-error);
+}
+
+.critical .dot {
+  background: var(--color-error);
+}
+
+.major {
+  background: hsla(15, 85%, 55%, 0.15);
+  color: var(--color-severity-major);
+}
+
+.major .dot {
+  background: var(--color-severity-major);
+}
+
+.minor {
+  background: var(--color-warning-muted);
+  color: var(--color-warning);
+}
+
+.minor .dot {
+  background: var(--color-warning);
+}
+
+.advisory {
+  background: var(--color-info-muted);
+  color: var(--color-info);
+}
+
+.advisory .dot {
+  background: var(--color-info);
+}
+
+/* ═══════════════ STATUS VARIANTS ═══════════════ */
+
+.success {
+  background: var(--color-success-muted);
+  color: var(--color-success);
+}
+
+.success .dot {
+  background: var(--color-success);
+}
+
+.warning {
+  background: var(--color-warning-muted);
+  color: var(--color-warning);
+}
+
+.warning .dot {
+  background: var(--color-warning);
+}
+
+.error {
+  background: var(--color-error-muted);
+  color: var(--color-error);
+}
+
+.error .dot {
+  background: var(--color-error);
+}
+
+.info {
+  background: var(--color-info-muted);
+  color: var(--color-info);
+}
+
+.info .dot {
+  background: var(--color-info);
+}
+
+.neutral {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+}
+
+.neutral .dot {
+  background: var(--color-text-tertiary);
+}
+
+/* ═══════════════ SIZES ═══════════════ */
+
+.sm {
+  padding: 1px 6px;
+  font-size: 10px;
+}
+
+.md {
+  padding: 2px 10px;
+  font-size: var(--text-xs);
+}
+
+.lg {
+  padding: 4px 14px;
+  font-size: var(--text-sm);
+}
