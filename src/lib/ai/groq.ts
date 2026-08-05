@@ -68,6 +68,13 @@ export async function generateCompletion<T = string>(
     responseFormat,
   } = options;
 
+  let effectiveSystemPrompt = systemPrompt;
+
+  // Groq API rule: when response_format is json_object, the word "json" MUST appear in messages
+  if (responseFormat?.type === "json_object" && !/json/i.test(effectiveSystemPrompt + userPrompt)) {
+    effectiveSystemPrompt += " Respond with valid JSON.";
+  }
+
   const keys = getGroqApiKeys();
 
   // Model candidates sequence
@@ -77,14 +84,14 @@ export async function generateCompletion<T = string>(
   ];
 
   const messages: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
+    { role: "system", content: effectiveSystemPrompt },
     { role: "user", content: userPrompt },
   ];
 
   let lastError: unknown;
 
   // Try across active key pool
-  for (let keyAttempt = 0; keyAttempt < keys.length; keyAttempt += 1) {
+  for (let keyAttempt = 0; keyAttempt < Math.max(1, keys.length * 2); keyAttempt += 1) {
     const keyIdx = (currentKeyIndex + keyAttempt) % keys.length;
     const client = getGroqClient(keyIdx);
 
@@ -112,11 +119,8 @@ export async function generateCompletion<T = string>(
           }
         }
 
-        // On successful completion, advance active key index to balance key load across calls
-        if (keyAttempt > 0) {
-          currentKeyIndex = keyIdx;
-        }
-
+        // On successful completion, save working key index
+        currentKeyIndex = keyIdx;
         return content as unknown as T;
       } catch (caught: unknown) {
         lastError = caught;
@@ -126,27 +130,28 @@ export async function generateCompletion<T = string>(
           msg.includes("429") ||
           msg.includes("rate_limit") ||
           msg.includes("tokens per day") ||
-          msg.includes("Limit 100000");
+          msg.includes("Limit 100000") ||
+          msg.includes("TPD");
 
-        const isDecommissionedOrNotFound =
+        const isDecommissioned =
           msg.includes("decommissioned") ||
-          msg.includes("model_decommissioned") ||
-          msg.includes("not_found") ||
-          msg.includes("400");
+          msg.includes("model_decommissioned");
 
-        if (isDecommissionedOrNotFound) {
-          console.warn(`[Groq AI] Model '${currentModel}' is decommissioned or unavailable. Skipping...`);
-          continue; // Skip decommissioned models immediately
+        if (isDecommissioned) {
+          console.warn(`[Groq AI] Model '${currentModel}' is decommissioned. Skipping model candidate...`);
+          continue;
         }
 
         if (isRateLimit) {
           console.warn(
-            `[Groq AI] Rate limit on model '${currentModel}' (Key index ${keyIdx}). Trying candidate...`
+            `[Groq AI] Rate limit (429) hit on key ${keyIdx} with model ${currentModel}. Rotating key and model...`
           );
-          continue; // Try next fallback model on this key
+          currentKeyIndex = (currentKeyIndex + 1) % keys.length;
+          continue;
         }
 
-        throw caught;
+        // For other 400/500 errors, attempt fallback model candidates
+        console.warn(`[Groq AI] Request error on model ${currentModel}: ${msg}`);
       }
     }
   }

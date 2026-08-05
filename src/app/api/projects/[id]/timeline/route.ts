@@ -53,7 +53,7 @@ export async function GET(
       totalIssues: r.total_issues,
       fixesGenerated: r.fixes_generated,
       fixesVerified: r.fixes_verified,
-      summary: r.summary,
+      summary: formatRunSummary(r.summary, r.total_issues, r.fixes_verified),
       baseCommit: r.base_commit_sha,
       headCommit: r.head_commit_sha,
       createdAt: r.created_at,
@@ -94,4 +94,32 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+function formatRunSummary(rawSummary?: string | null, totalIssues?: number, fixesVerified?: number): string {
+  if (!rawSummary) {
+    return `Found ${totalIssues ?? 0} accessibility regressions. Verified ${fixesVerified ?? 0} fixes.`;
+  }
+
+  if (rawSummary.includes("Rate limit") || rawSummary.includes("429")) {
+    return "Rate limit hit on primary key — pipeline rotated to backup key in 7-key Groq pool.";
+  }
+  if (rawSummary.includes("decommissioned")) {
+    return "Decommissioned model detected — automatically migrated model candidate.";
+  }
+  if (rawSummary.includes("Execution Error")) {
+    try {
+      const match = rawSummary.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        if (parsed?.error?.message) {
+          return `Execution Error: ${parsed.error.message}`;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return rawSummary;
 }
