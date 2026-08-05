@@ -121,19 +121,50 @@ export default function ProjectDetailPage({
           </div>
         </div>
 
-        <Button
-          variant="primary"
-          size="lg"
-          isLoading={isStartingPipeline}
-          onClick={handleStartPipeline}
-          leftIcon={
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-          }
-        >
-          Run AccessDiff Pipeline
-        </Button>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => router.push(`/projects/${id}/explorer`)}
+            leftIcon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            }
+          >
+            Explore Codebase
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => router.push(`/projects/${id}/diff`)}
+            leftIcon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 3h5v5" />
+                <path d="M8 21H3v-5" />
+                <path d="M21 3l-7.5 7.5" />
+                <path d="M3 21l7.5-7.5" />
+              </svg>
+            }
+          >
+            Code Diffs
+          </Button>
+
+          <Button
+            variant="primary"
+            size="lg"
+            isLoading={isStartingPipeline}
+            onClick={handleStartPipeline}
+            leftIcon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+            }
+          >
+            Run AccessDiff Pipeline
+          </Button>
+        </div>
       </div>
 
       <div className={styles.grid}>
@@ -157,10 +188,16 @@ export default function ProjectDetailPage({
             {project.risk_areas && project.risk_areas.length > 0 ? (
               <div className={styles.riskList}>
                 {project.risk_areas.map((risk, idx) => (
-                  <div key={idx} className={styles.riskItem}>
+                  <div
+                    key={idx}
+                    className={styles.riskItem}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => router.push(`/projects/${id}/explorer`)}
+                    title="Click to view file in Codebase Explorer"
+                  >
                     <div className={styles.riskInfo}>
                       <span className={styles.riskComponent}>{risk.component}</span>
-                      <span className={styles.riskPath}>{risk.filePath}</span>
+                      <span className={styles.riskPath}>📂 {risk.filePath}</span>
                       <span className={styles.riskReason}>{risk.reason}</span>
                     </div>
                     <Badge
