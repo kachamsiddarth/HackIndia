@@ -29,12 +29,12 @@ export const DEFAULT_MODEL = "llama-3.3-70b-versatile";
 export const FAST_MODEL = "llama-3.1-8b-instant";
 
 /**
- * Fallback models ordered by quality and token availability.
+ * Active and supported Groq models ordered by capability & token budget.
+ * (Decommissioned models like llama3-70b-8192 are removed).
  */
 export const FALLBACK_MODELS = [
   "llama-3.3-70b-versatile",
   "llama-3.1-8b-instant",
-  "llama3-70b-8192",
   "mixtral-8x7b-32768",
 ];
 
@@ -44,7 +44,7 @@ export interface ChatOptions {
   maxTokens?: number;
   systemPrompt?: string;
   responseFormat?: { type: "json_object" | "text" };
-  /** Set to true for lightweight tasks (architecture summary, diagnosis) to save 70B tokens */
+  /** Set to true for lightweight tasks to save 70B token quotas */
   useFastModel?: boolean;
 }
 
@@ -52,8 +52,9 @@ export interface ChatOptions {
  * Call Groq API with system and user prompts.
  * Features:
  * 1. Automatic multi-key API rotation when a key hits rate limits.
- * 2. Automatic model fallback (70b -> 8b instant -> 70b-8192 -> mixtral) on rate limit / 429 errors.
- * 3. Smart JSON response extraction & fallback parsing.
+ * 2. Skips decommissioned models automatically.
+ * 3. Fast candidate fallback on 429 / TPD limit errors.
+ * 4. Smart JSON response extraction & fallback parsing.
  */
 export async function generateCompletion<T = string>(
   userPrompt: string,
@@ -82,12 +83,11 @@ export async function generateCompletion<T = string>(
 
   let lastError: unknown;
 
-  // Try each API key in pool
+  // Try across active key pool
   for (let keyAttempt = 0; keyAttempt < keys.length; keyAttempt += 1) {
     const keyIdx = (currentKeyIndex + keyAttempt) % keys.length;
     const client = getGroqClient(keyIdx);
 
-    // Try model candidates
     for (const currentModel of modelCandidates) {
       try {
         const completion = await client.chat.completions.create({
@@ -112,31 +112,42 @@ export async function generateCompletion<T = string>(
           }
         }
 
+        // On successful completion, advance active key index to balance key load across calls
+        if (keyAttempt > 0) {
+          currentKeyIndex = keyIdx;
+        }
+
         return content as unknown as T;
       } catch (caught: unknown) {
         lastError = caught;
+        const msg = caught instanceof Error ? caught.message : String(caught);
+
         const isRateLimit =
-          caught instanceof Error &&
-          (caught.message.includes("429") ||
-            caught.message.includes("rate_limit") ||
-            caught.message.includes("tokens per day") ||
-            caught.message.includes("Limit 100000"));
+          msg.includes("429") ||
+          msg.includes("rate_limit") ||
+          msg.includes("tokens per day") ||
+          msg.includes("Limit 100000");
+
+        const isDecommissionedOrNotFound =
+          msg.includes("decommissioned") ||
+          msg.includes("model_decommissioned") ||
+          msg.includes("not_found") ||
+          msg.includes("400");
+
+        if (isDecommissionedOrNotFound) {
+          console.warn(`[Groq AI] Model '${currentModel}' is decommissioned or unavailable. Skipping...`);
+          continue; // Skip decommissioned models immediately
+        }
 
         if (isRateLimit) {
           console.warn(
-            `[Groq AI] Rate limit on model '${currentModel}' (Key index ${keyIdx}). Trying fallback...`
+            `[Groq AI] Rate limit on model '${currentModel}' (Key index ${keyIdx}). Trying candidate...`
           );
-          continue; // Try next fallback model
+          continue; // Try next fallback model on this key
         }
 
         throw caught;
       }
-    }
-
-    // If all models failed on this key due to rate limits, rotate active key index
-    if (keys.length > 1) {
-      currentKeyIndex = (currentKeyIndex + 1) % keys.length;
-      console.warn(`[Groq AI] Rotated active API key to key #${currentKeyIndex + 1}`);
     }
   }
 
