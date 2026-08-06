@@ -1,0 +1,22 @@
+name: AccessDiff accessibility regression check
+
+on:
+  push:
+    branches: ["**"]
+
+jobs:
+  accessdiff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify AccessDiff of the commit range
+        env:
+          ACCESSDIFF_WEBHOOK_URL: ${{ secrets.ACCESSDIFF_WEBHOOK_URL }}
+          ACCESSDIFF_WEBHOOK_SECRET: ${{ secrets.ACCESSDIFF_WEBHOOK_SECRET }}
+        run: |
+          payload=$(jq -nc --arg repository "${{ github.repository }}" --arg before "${{ github.event.before }}" --arg after "${{ github.sha }}" --arg ref "${{ github.ref }}" '{repository:{full_name:$repository},before:$before,after:$after,ref:$ref}')
+          signature="sha256=$(printf '%s' "$payload" | openssl dgst -sha256 -hmac "$ACCESSDIFF_WEBHOOK_SECRET" -hex | sed 's/^.* //')"
+          curl --fail-with-body --request POST "$ACCESSDIFF_WEBHOOK_URL" \
+            --header "Content-Type: application/json" \
+            --header "X-GitHub-Event: push" \
+            --header "X-Hub-Signature-256: $signature" \
+            --data "$payload"

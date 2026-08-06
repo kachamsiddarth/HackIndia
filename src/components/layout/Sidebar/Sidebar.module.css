@@ -206,3 +206,11 @@
   background: var(--color-error-muted);
   color: var(--color-error);
 }
+
+@media (max-width: 760px) {
+  .sidebar { width: var(--sidebar-collapsed); padding: var(--space-4) var(--space-2); }
+  .logoText, .navLink > span:not(.navIcon), .userDetails, .logoutButton { display: none; }
+  .navLink { justify-content: center; padding: var(--space-3); }
+  .header { justify-content: center; }
+  .toggleButton { display: none; }
+}

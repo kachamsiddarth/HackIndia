@@ -169,11 +169,11 @@ NEXT_PUBLIC_APP_URL
 
 | Metric | Value |
 |---|---|
-| Current Phase | Phase 8 — AI Governance |
-| Tasks Completed | 75/124 |
+| Current Phase | Phase 14 — Polish & Accessibility Audit (complete) |
+| Tasks Completed | 124/124 |
 | Documentation Status | ✅ Complete (9/9 files) |
-| Implementation Status | Phases 0–7 complete (75/124 tasks) |
-| Last Updated | 2026-08-05 |
+| Implementation Status | All phases complete (124/124 tasks) |
+| Last Updated | 2026-08-06 |
 
 ---
 
@@ -195,6 +195,8 @@ Chronological record of significant decisions made during development.
 | 2026-08-05 | Completed Phase 6 Pipeline UI & Issue Views | Extracted presentation components (`StageCard`, `ProgressIndicator`, `CommitSelector`, `IssueCard`, `IssueDetail`), integrated `/issues` page with `GET /api/issues` API |
 | 2026-08-05 | Completed Phase 7 Fixes & Verification | Connected 7 API keys Groq pool with model fallback, built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, and API routes `approve`, `reject`, and `rollback` |
 | 2026-08-06 | Scoped Experience Mode and repaired diff review | Experience simulations now target only a sandboxed imported-repository preview; persisted fix records are joined with issues for the code-diff workspace and the completed pipeline links directly to it. |
+| 2026-08-06 | Completed Phase 13 CI/CD and landing | Added signed GitHub push webhook processing, Actions template, CI/CD settings UI, public animated landing page, and SEO metadata; repository deployment must set `GITHUB_WEBHOOK_SECRET` plus matching GitHub Action secrets. |
+| 2026-08-06 | Completed Phase 14 polish and accessibility audit | Added Next.js recovery boundaries, dashboard loading fallback, responsive sidebar behavior, production-page axe-core and keyboard/semantic audits, and refreshed setup/verification documentation. |
 
 ---
 

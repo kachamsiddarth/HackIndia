@@ -16,19 +16,22 @@ export default function LoginPage() {
 
 function LoginContent() {
   const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const error = localError || searchParams.get("error");
 
   const handleGitHubLogin = async () => {
     try {
       setIsLoading(true);
+      setLocalError(null);
       const supabase = createClient();
-      const origin = window.location.origin;
+      const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+      const redirectTo = configuredAppUrl || `${window.location.origin}`;
 
-      const { error: authError } = await supabase.auth.signInWithOAuth({
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
         provider: "github",
         options: {
-          redirectTo: `${origin}/auth/callback`,
+          redirectTo: `${redirectTo}/auth/callback`,
           scopes: "repo user:email",
         },
       });
@@ -36,8 +39,13 @@ function LoginContent() {
       if (authError) {
         throw authError;
       }
-    } catch (err) {
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
       console.error("Login failed:", err);
+      const msg = err?.message || "Failed to connect to authentication server. Please try again.";
+      setLocalError(msg);
       setIsLoading(false);
     }
   };

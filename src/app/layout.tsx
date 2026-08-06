@@ -17,6 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "AccessDiff — AI Accessibility Copilot for GitHub",
   description:
     "AI-powered Accessibility Engineering Platform that performs Accessibility Regression Analysis on GitHub repositories. Detect only newly introduced accessibility issues.",
@@ -28,6 +29,12 @@ export const metadata: Metadata = {
     "regression analysis",
     "a11y",
   ],
+  openGraph: {
+    type: "website",
+    title: "AccessDiff — AI Accessibility Copilot for GitHub",
+    description: "Catch newly introduced WCAG regressions before they ship.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

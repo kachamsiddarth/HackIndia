@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "audit:a11y": "node scripts/audit-landing.mjs",
+    "audit:keyboard": "node scripts/audit-keyboard.mjs",
     "pipeline:run-imported": "node --env-file=.env.local --import tsx scripts/run-imported-pipeline.ts"
   },
   "dependencies": {

@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AccessDiff
 
-## Getting Started
+AccessDiff is an AI-assisted accessibility regression workflow for GitHub repositories. It compares two commits, reports newly introduced WCAG issues, generates and verifies remediation patches, and gives developers a reviewable code-diff workspace.
 
-First, run the development server:
+## What it includes
+
+- GitHub OAuth project import and commit comparison
+- Regression-only accessibility pipeline with persisted runs, stages, issues, and fixes
+- Before/after code-diff review, approval, rejection, rollback, and PR creation actions
+- Governance records and Sarvam-powered assistant capabilities
+- Imported-repository-only accessibility Experience Mode
+- Signed GitHub push webhook and a ready-to-copy GitHub Actions workflow
+
+## Local setup
+
+1. Copy `.env.local.example` to `.env.local` and set the required secrets. Never commit `.env.local`.
+2. Install dependencies with `npm install`.
+3. Apply the Supabase migrations in `supabase/migrations/` to the linked project.
+4. Start the app with `npm run dev`, then open `http://localhost:3000`.
+
+Required variables are documented in `.env.local.example`. GitHub webhook processing additionally requires `GITHUB_WEBHOOK_SECRET`; configure the same value in the GitHub repository webhook and GitHub Actions secrets.
+
+## Verification commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npx tsc --noEmit
+npm run build
+node scripts/audit-landing.mjs http://127.0.0.1:3000/
+node scripts/audit-keyboard.mjs http://127.0.0.1:3000/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The two audit scripts require a running local app. They use Playwright and axe-core to check WCAG rules, landmarks, heading structure, and accessible names on the public landing page.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## CI/CD
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`.github/workflows/accessdiff.yml` is the repository template. Add the documented GitHub Actions secrets before enabling it. The workflow posts a signed payload to `/api/webhooks/github`; the route validates the HMAC signature before it processes a push event.
 
-## Learn More
+## Project documentation
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Implementation and product decisions are maintained in `Tracker.md`, `ImplementationPlan.md`, `Memory.md`, `PRD.md`, `Schema.md`, `Design.md`, `AppFlow.md`, and `Rules.md`.

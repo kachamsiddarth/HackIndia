@@ -1,53 +1,62 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+function safeNext(value: string | null) {
+  return value?.startsWith("/") && !value.startsWith("//") ? value : "/dashboard";
+}
+
+function loginFailure(request: Request, message: string) {
+  const url = new URL("/login", request.url);
+  url.searchParams.set("error", message.slice(0, 180));
+  return NextResponse.redirect(url);
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const providerError = searchParams.get("error_description") ?? searchParams.get("error");
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/dashboard";
-
-  if (code) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error && data.session) {
-      const { user, session } = data;
-      const providerToken = session.provider_token;
-
-      // Upsert user profile into public.users
-      if (user) {
-        const githubUsername =
-          user.user_metadata.preferred_username ||
-          user.user_metadata.user_name ||
-          user.email?.split("@")[0] ||
-          "user";
-        const displayName =
-          user.user_metadata.full_name || user.user_metadata.name || githubUsername;
-        const avatarUrl = user.user_metadata.avatar_url || "";
-
-        await supabase.from("users").upsert({
-          id: user.id,
-          github_username: githubUsername,
-          display_name: displayName,
-          avatar_url: avatarUrl,
-          github_token: providerToken || "",
-          updated_at: new Date().toISOString(),
-        });
-      }
-
-      const forwardedHost = request.headers.get("x-forwarded-host");
-      const isLocalEnv = process.env.NODE_ENV === "development";
-
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
-    }
+  if (providerError || !code) {
+    return loginFailure(request, providerError ?? "GitHub did not return an authorization code.");
   }
 
-  // Return to login page if there's an error
-  return NextResponse.redirect(`${origin}/login?error=Could%20not%20authenticate`);
+  const destination = new URL(safeNext(searchParams.get("next")), request.url);
+  const response = NextResponse.redirect(destination);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.headers.get("cookie")
+            ? request.cookies.getAll()
+            : [];
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    }
+  );
+
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error || !data.session || !data.user) {
+    return loginFailure(request, error?.message ?? "Supabase did not return a session.");
+  }
+
+  const user = data.user;
+  const githubUsername = user.user_metadata.preferred_username || user.user_metadata.user_name || user.email?.split("@")[0] || "user";
+  const displayName = user.user_metadata.full_name || user.user_metadata.name || githubUsername;
+  const { error: profileError } = await supabase.from("users").upsert({
+    id: user.id,
+    github_username: githubUsername,
+    display_name: displayName,
+    avatar_url: user.user_metadata.avatar_url || "",
+    github_token: data.session.provider_token || "",
+    updated_at: new Date().toISOString(),
+  });
+
+  if (profileError) {
+    return loginFailure(request, `Unable to save your profile: ${profileError.message}`);
+  }
+  return response;
 }

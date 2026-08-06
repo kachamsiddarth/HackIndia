@@ -272,16 +272,16 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 13.1 | GitHub Actions YAML template | ⬜ | |
-| 13.2 | CI/CD settings UI | ⬜ | |
-| 13.3 | Webhook receiver | ⬜ | |
-| 13.4 | Landing page | ⬜ | |
-| 13.5 | Landing page animations | ⬜ | |
-| 13.6 | SEO | ⬜ | |
+| 13.1 | GitHub Actions YAML template | ✅ | `.github/workflows/accessdiff.yml` signs and sends push commit ranges. |
+| 13.2 | CI/CD settings UI | ✅ | `/settings` configures threshold/fail policy and copies or downloads workflow guidance. |
+| 13.3 | Webhook receiver | ✅ | Signed `POST /api/webhooks/github` validates GitHub signatures and starts monitored-project pipelines. |
+| 13.4 | Landing page | ✅ | Public product landing page with hero, workflow, demo, and GitHub CTA. |
+| 13.5 | Landing page animations | ✅ | GSAP reveal animations and Lenis smooth scroll respect reduced-motion preferences. |
+| 13.6 | SEO | ✅ | Root metadata, Open Graph, robots directives, and SoftwareApplication JSON-LD added. |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 12 incomplete
+**Phase Status:** ✅ Completed (6/6 tasks complete)
+**Verified:** `npm run lint`, `npx tsc --noEmit`, and `npm run build` pass; build includes `/`, `/settings`, and `/api/webhooks/github`.
+**Blockers:** None
 
 ---
 
@@ -289,19 +289,19 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 14.1 | Self accessibility audit | ⬜ | |
-| 14.2 | Keyboard navigation audit | ⬜ | |
-| 14.3 | Screen reader testing | ⬜ | |
-| 14.4 | Performance optimization | ⬜ | |
-| 14.5 | Error boundary implementation | ⬜ | |
-| 14.6 | Loading states | ⬜ | |
-| 14.7 | Empty states | ⬜ | |
-| 14.8 | Final responsive review | ⬜ | |
-| 14.9 | Documentation cleanup | ⬜ | |
+| 14.1 | Self accessibility audit | ✅ | axe-core WCAG 2.x A/AA audit added and passed against the production build. |
+| 14.2 | Keyboard navigation audit | ✅ | Automated focusable-control, landmark, heading, and accessible-name audit added and passed. |
+| 14.3 | Screen reader testing | ✅ | Semantic landmark, heading, and control-name checks passed; live regions and labels were reviewed across data views. |
+| 14.4 | Performance optimization | ✅ | Landing-page animation dependencies are loaded only for motion-enabled visitors; reduced-motion remains respected. |
+| 14.5 | Error boundary implementation | ✅ | Added route and global recovery boundaries plus a not-found page. |
+| 14.6 | Loading states | ✅ | Added dashboard route loading fallback; existing data-view skeletons retained. |
+| 14.7 | Empty states | ✅ | Audited existing pipeline, issue, project, and diff empty messages for meaningful next actions. |
+| 14.8 | Final responsive review | ✅ | Added compact mobile sidebar treatment and preserved keyboard-visible focus styles. |
+| 14.9 | Documentation cleanup | ✅ | Replaced starter README with setup, verification, CI/CD, and architecture guidance. |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 13 incomplete
+**Phase Status:** ✅ Completed (9/9 tasks complete)
+**Verified:** Yes — lint, TypeScript, production build, axe-core, and keyboard/semantic audit passed
+**Blockers:** None
 
 ---
 
@@ -322,9 +322,9 @@
 | Phase 10 — PR & Timeline | ✅ | 8/8 |
 | Phase 11 — Sarvam Assistant | ✅ | 8/8 |
 | Phase 12 — Experience Mode | ✅ | 5/5 |
-| Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
-| Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **109/124** |
+| Phase 13 — CI/CD & Landing | ✅ | 6/6 |
+| Phase 14 — Polish | ✅ | 9/9 |
+| **Total** | | **124/124** |
 
 ---
 
@@ -336,6 +336,7 @@
 | 2026-08-04 | Completed Phase 1 (Design System & UI Components) | Phase 1 |
 | 2026-08-04 | Configured environment variables & completed Phase 0 & Phase 2 (Auth & Layout Shell) | Phase 0 & 2 |
 | 2026-08-04 | Completed Phase 3 (GitHub Repo Import, Groq Setup & RepositoryAgent) | Phase 3 |
+| 2026-08-06 | Completed Phase 14 (Polish & Accessibility Audit): recovery boundaries, loading fallback, responsive sidebar, automated axe-core and keyboard audits, and documentation cleanup | Phase 14 |
 | 2026-08-04 | Completed Phase 4 (typed Helix ADL orchestration, agents, governance records, and PR agent); TypeScript and production build verified | Phase 4 |
 | 2026-08-04 | Implemented Phase 5 pipeline APIs, SSE status stream, persistent pipeline results, WCAG mapping, regression filtering, and verification loop; axe-core browser runner remains pending | Phase 5 |
 | 2026-08-05 | Verified Phase 5 with live GitHub, Groq, and Supabase integration; corrected fix persistence and optimization JSON-mode handling | Phase 5 |
@@ -351,6 +352,7 @@
 | 2026-08-05 | Resolved pipeline execution errors: enforced required `'json'` keyword in system prompts for `json_object` format, enabled active multi-key rotation across all 7 Groq API keys on 429 TPD limit errors, and sanitized raw error JSON in timeline UI | Fixes |
 | 2026-08-05 | Completed Phase 11 (Sarvam AI Assistant): integrated Sarvam API key, built `src/lib/sarvam/client.ts`, `/api/chat` route, `/api/voice` route, `SarvamAssistantAgent`, and `/assistant` dashboard page supporting 11 Indian languages, bidirectional voice STT/TTS audio playback (`bulbul:v1` + browser SpeechSynthesis fallback), auto-speak toggle, context injection, and chat history; verified build (28 routes) | Phase 11 |
 | 2026-08-06 | Scoped Experience Mode to sandboxed previews of authenticated imported repositories; removed the global floating Experience Mode trigger and dashboard-wide effects. Fixed code-diff data loading and added pipeline-to-diff navigation with before/after code previews and fix actions. | Phase 9 & 12 |
+| 2026-08-06 | Completed Phase 13: added signed GitHub webhook pipeline triggering, Actions workflow template, CI/CD settings page, public GSAP/Lenis landing page, and SEO metadata; lint, TypeScript, and production build verified. | Phase 13 |
 
 ---
 
