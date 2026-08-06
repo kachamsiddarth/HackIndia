@@ -26,6 +26,21 @@
   background: var(--color-bg-hover);
 }
 
+.diffAction {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.diffLink {
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .eyebrow {
   margin: 0 0 0.4rem;
   color: var(--color-text-secondary);

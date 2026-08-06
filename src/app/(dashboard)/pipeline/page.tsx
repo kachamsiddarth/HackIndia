@@ -233,6 +233,13 @@ function PipelineContent(): React.ReactNode {
         error={displayError}
         loading={loading && !queryError}
       />
+      {projectId && run?.status === "completed" && results?.fixes.length ? (
+        <div className={styles.diffAction}>
+          <Link className={styles.diffLink} href={`/projects/${projectId}/diff`}>
+            Review code diffs and AI fixes
+          </Link>
+        </div>
+      ) : null}
     </main>
   );
 }

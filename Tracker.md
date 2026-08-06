@@ -206,7 +206,7 @@
 | 9.4 | `CodeBlock` component | ✅ | Created `CodeBlock` syntax viewer in `src/components/explorer/CodeBlock/` |
 | 9.5 | Inline annotations | ✅ | Integrated line callouts for WCAG violations directly inside `CodeBlock` lines |
 | 9.6 | Explorer page | ✅ | Built at `/projects/[id]/explorer` with interactive file navigation |
-| 9.7 | Code diff page | ✅ | Built at `/projects/[id]/diff` for split/unified patch inspection |
+| 9.7 | Code diff page | ✅ | Fixed at `/projects/[id]/diff`: joins persisted fixes to issues, shows unified patches, before/after code previews, and fix actions. |
 
 **Phase Status:** ✅ Completed (7/7 tasks complete)
 **Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (22 routes generated).
@@ -256,15 +256,15 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 12.1 | Screen reader simulation | ⬜ | |
-| 12.2 | Keyboard navigation view | ⬜ | |
-| 12.3 | Color blindness filter | ⬜ | |
-| 12.4 | High contrast toggle | ⬜ | |
-| 12.5 | Experience mode panel | ⬜ | |
+| 12.1 | Screen reader simulation | ✅ | Built `ScreenReaderSimulator` with Web Speech API audio playback, speech HUD transcript log, ARIA inspector, and rate control |
+| 12.2 | Keyboard navigation view | ✅ | Built `KeyboardNavOverlay` with numbered tab order badges (#1, #2...), focus tracer, and keyboard step controls |
+| 12.3 | Color blindness filter | ✅ | Built `ColorBlindnessSVGFilters` with SVG feColorMatrix filters for Protanopia, Deuteranopia, Tritanopia, Achromatopsia |
+| 12.4 | High contrast toggle | ✅ | Built WCAG AAA High Contrast Dark and High Contrast Light themes with enforced border outlines and focus rings |
+| 12.5 | Experience mode panel | ✅ | Built floating `ExperienceModePanel` drawer, global `ExperienceProvider`, font scaling, line spacing, presets, and interactive `/experience` sandbox page |
 
-**Phase Status:** ⬜ Not Started
-**Verified:** No
-**Blockers:** Phase 11 incomplete
+**Phase Status:** ✅ Completed (5/5 tasks complete)
+**Verified:** Yes — lint, TypeScript, and Next.js 16 production build verified (`/experience` route generated, 29 routes).
+**Blockers:** None
 
 ---
 
@@ -321,10 +321,10 @@
 | Phase 9 — Repo Explorer | ✅ | 7/7 |
 | Phase 10 — PR & Timeline | ✅ | 8/8 |
 | Phase 11 — Sarvam Assistant | ✅ | 8/8 |
-| Phase 12 — Experience Mode | ⬜ | 0/5 |
+| Phase 12 — Experience Mode | ✅ | 5/5 |
 | Phase 13 — CI/CD & Landing | ⬜ | 0/6 |
 | Phase 14 — Polish | ⬜ | 0/9 |
-| **Total** | | **104/124** |
+| **Total** | | **109/124** |
 
 ---
 
@@ -350,6 +350,7 @@
 | 2026-08-05 | Completed Phase 10 (Pull Requests & Timeline): built `POST /api/pull-requests/create`, `GET /api/pull-requests`, `PRPanel` component, `GET /api/projects/[id]/timeline`, `TimelineChart`, `ScoreGauge`, and `/projects/[id]/timeline` page; verified with lint, tsc, and Next.js build (25 routes) | Phase 10 |
 | 2026-08-05 | Resolved pipeline execution errors: enforced required `'json'` keyword in system prompts for `json_object` format, enabled active multi-key rotation across all 7 Groq API keys on 429 TPD limit errors, and sanitized raw error JSON in timeline UI | Fixes |
 | 2026-08-05 | Completed Phase 11 (Sarvam AI Assistant): integrated Sarvam API key, built `src/lib/sarvam/client.ts`, `/api/chat` route, `/api/voice` route, `SarvamAssistantAgent`, and `/assistant` dashboard page supporting 11 Indian languages, bidirectional voice STT/TTS audio playback (`bulbul:v1` + browser SpeechSynthesis fallback), auto-speak toggle, context injection, and chat history; verified build (28 routes) | Phase 11 |
+| 2026-08-06 | Scoped Experience Mode to sandboxed previews of authenticated imported repositories; removed the global floating Experience Mode trigger and dashboard-wide effects. Fixed code-diff data loading and added pipeline-to-diff navigation with before/after code previews and fix actions. | Phase 9 & 12 |
 
 ---
 

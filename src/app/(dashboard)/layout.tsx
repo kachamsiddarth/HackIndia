@@ -1,7 +1,6 @@
 import { type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { Sidebar, Header } from "@/components/layout";
-import styles from "./layout.module.css";
+import { DashboardClientShell } from "@/components/layout";
 
 export default async function DashboardLayout({
   children,
@@ -31,12 +30,8 @@ export default async function DashboardLayout({
     : undefined;
 
   return (
-    <div className={styles.container}>
-      <Sidebar user={userProfile} />
-      <div className={styles.mainWrapper}>
-        <Header />
-        <main className={styles.content}>{children}</main>
-      </div>
-    </div>
+    <DashboardClientShell userProfile={userProfile}>
+      {children}
+    </DashboardClientShell>
   );
 }

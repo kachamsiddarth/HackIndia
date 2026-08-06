@@ -112,7 +112,7 @@ export default function AssistantPage() {
         currentAudioRef.current = audio;
 
         audio.onended = () => setSpeakingId(null);
-        audio.onerror = () => fallbackWebSpeech(text, langCode, msgId);
+        audio.onerror = () => fallbackWebSpeech(text, langCode);
         await audio.play();
         return;
       }
@@ -121,10 +121,10 @@ export default function AssistantPage() {
     }
 
     // Fallback: Browser Web Speech Synthesis
-    fallbackWebSpeech(text, langCode, msgId);
+    fallbackWebSpeech(text, langCode);
   };
 
-  const fallbackWebSpeech = (text: string, langCode: SarvamLanguage, msgId: string) => {
+  const fallbackWebSpeech = (text: string, langCode: SarvamLanguage) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       setSpeakingId(null);
       return;
@@ -147,7 +147,7 @@ export default function AssistantPage() {
     if (!msg || sending) return;
 
     const userMsg: ChatMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: "user",
       content: msg,
       language,
@@ -166,7 +166,7 @@ export default function AssistantPage() {
       const json = await res.json();
 
       const reply = json.data?.reply || json.error?.message || "Sorry, I couldn't process that.";
-      const newMsgId = (Date.now() + 1).toString();
+      const newMsgId = crypto.randomUUID();
 
       const assistantMsg: ChatMessage = {
         id: newMsgId,

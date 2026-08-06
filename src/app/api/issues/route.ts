@@ -95,6 +95,10 @@ export async function GET(request: Request): Promise<NextResponse> {
       status: string;
       diff_patch: string;
       reasoning: string | null;
+      file_path: string;
+      before_code: string;
+      after_code: string;
+      trust_score: number | null;
     }
     let fixesData: FixRecord[] = [];
     if (issueIds.length > 0) {
@@ -111,6 +115,10 @@ export async function GET(request: Request): Promise<NextResponse> {
       status: fix.status,
       diffPatch: fix.diff_patch,
       rationale: fix.reasoning,
+      filePath: fix.file_path,
+      beforeCode: fix.before_code,
+      afterCode: fix.after_code,
+      trustScore: fix.trust_score,
     }));
 
     return NextResponse.json({

@@ -194,6 +194,7 @@ Chronological record of significant decisions made during development.
 | 2026-08-05 | Extracted `PipelineView` component | Moved pipeline run/status/results rendering out of the page into `src/components/pipeline/PipelineView/` as a pure presentational component, keeping all data-fetching and SSE logic in the page |
 | 2026-08-05 | Completed Phase 6 Pipeline UI & Issue Views | Extracted presentation components (`StageCard`, `ProgressIndicator`, `CommitSelector`, `IssueCard`, `IssueDetail`), integrated `/issues` page with `GET /api/issues` API |
 | 2026-08-05 | Completed Phase 7 Fixes & Verification | Connected 7 API keys Groq pool with model fallback, built `DiffViewer`, `TrustScore`, `VerificationStatusIndicator`, `FixActions`, and API routes `approve`, `reject`, and `rollback` |
+| 2026-08-06 | Scoped Experience Mode and repaired diff review | Experience simulations now target only a sandboxed imported-repository preview; persisted fix records are joined with issues for the code-diff workspace and the completed pipeline links directly to it. |
 
 ---
 

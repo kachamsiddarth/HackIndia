@@ -1,0 +1,237 @@
+.simulatorPanel {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  width: 360px;
+  max-height: 480px;
+  background: rgba(15, 15, 18, 0.95);
+  border: 1px solid var(--color-border-strong, #ff9d2e);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  z-index: 9997;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.minimized {
+  height: 48px;
+  max-height: 48px;
+  overflow: hidden;
+}
+
+.header {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--color-border-default, #333);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent, #ff9d2e);
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff66;
+  box-shadow: 0 0 8px #00ff66;
+  animation: pulse 1.5s infinite;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, #aaa);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tabNav {
+  display: flex;
+  border-bottom: 1px solid var(--color-border-default, #333);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-muted, #aaa);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabBtnActive {
+  border-bottom-color: var(--color-accent, #ff9d2e);
+  color: var(--color-accent, #ff9d2e);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.content {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+}
+
+.announcementCard {
+  background: rgba(255, 157, 46, 0.1);
+  border-left: 3px solid var(--color-accent, #ff9d2e);
+  padding: 10px 12px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 4px;
+}
+
+.announcementLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-accent, #ff9d2e);
+  margin-bottom: 2px;
+}
+
+.announcementText {
+  font-size: 13px;
+  color: var(--color-text-primary, #fff);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.transcriptList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.transcriptItem {
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.transcriptMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--color-text-muted, #888);
+  margin-bottom: 2px;
+}
+
+.inspectorBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.inspectorRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.inspectorKey {
+  color: var(--color-text-muted, #aaa);
+  font-weight: 500;
+}
+
+.inspectorValue {
+  color: #00ffff;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+
+.footer {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid var(--color-border-default, #333);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.rateSelector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rateBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted, #aaa);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.rateBtnActive {
+  background: var(--color-accent, #ff9d2e);
+  color: #000;
+  font-weight: 700;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}

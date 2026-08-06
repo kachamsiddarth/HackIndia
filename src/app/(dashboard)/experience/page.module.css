@@ -1,0 +1,20 @@
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; display: grid; gap: 1.25rem; }
+.header h1, .previewHeader h2, .assistCard h2 { margin: 0; }
+.header p { color: var(--color-text-secondary); max-width: 760px; }
+.eyebrow { margin: 0 0 .4rem; color: var(--color-accent); font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.error { color: var(--color-error); }
+.controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.controls label { display: grid; gap: .45rem; color: var(--color-text-secondary); font-size: .85rem; font-weight: 700; }
+.controls select { min-height: 2.6rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-md); background: var(--color-bg-elevated); color: var(--color-text-primary); padding: .5rem; }
+.modeGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: .75rem; }
+.mode, .modeActive { display: grid; gap: .45rem; padding: 1rem; text-align: left; border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); background: var(--color-bg-surface); color: var(--color-text-primary); cursor: pointer; }
+.mode span, .previewHeader span, .assistCard p { color: var(--color-text-secondary); font-size: .85rem; line-height: 1.5; }
+.modeActive { border-color: var(--color-accent); background: var(--color-accent-muted); }
+.previewCard { display: grid; gap: 1rem; }
+.previewHeader { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.previewHeader div { display: grid; gap: .35rem; }
+.modeBadge { padding: .35rem .55rem; border-radius: var(--radius-full); background: var(--color-info-muted); color: var(--color-info) !important; font-weight: 700; }
+.preview { width: 100%; min-height: 390px; border: 1px solid var(--color-border-default); border-radius: var(--radius-md); background: white; }
+.protanopia { filter: sepia(.35) saturate(.65) hue-rotate(310deg); }.deuteranopia { filter: sepia(.25) saturate(.5) hue-rotate(70deg); }.tritanopia { filter: sepia(.25) saturate(.7) hue-rotate(150deg); }.monochrome { filter: grayscale(1); }.keyboard { outline: 4px solid var(--color-accent); outline-offset: 4px; }.screen-reader { border-width: 3px; border-color: var(--color-info); }
+.assistCard { display: grid; gap: .6rem; }.assistCard p { margin: 0; }
+@media (max-width: 700px) { .container { padding: 1.25rem; }.controls { grid-template-columns: 1fr; }.previewHeader { display: grid; }.preview { min-height: 280px; } }
