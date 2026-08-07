@@ -142,17 +142,43 @@ async function persistPipelineOutput(run: PipelineRunRecord, output: HelixPipeli
   await persistGovernanceRecords(run, output);
 
   const verification = output.verification;
+  const totalIssues = persistedIssues.length;
+  const fixesVerified = verification?.passCount ?? 0;
+  const score = totalIssues === 0 ? 100 : Math.max(0, Math.round(100 - (totalIssues - fixesVerified) * 15));
+
   await updatePipeline(run.id, {
     status: output.completed ? "completed" : "failed",
     current_stage: output.completed ? "complete" : "failed",
-    total_issues: persistedIssues.length,
-    new_issues: persistedIssues.length,
+    total_issues: totalIssues,
+    new_issues: totalIssues,
     fixes_generated: output.fixes.length,
-    fixes_verified: verification?.passCount ?? 0,
-    summary: output.error ?? `Found ${persistedIssues.length} accessibility regressions.`,
+    fixes_verified: fixesVerified,
+    summary: output.error ?? `Found ${totalIssues} accessibility regressions.`,
     error_message: output.error,
     completed_at: new Date().toISOString(),
   });
+
+  // Record accessibility score entry for timeline visualization
+  try {
+    const criticalCount = (output.analysis?.violations ?? []).filter((v) => v.severity === "CRITICAL").length;
+    const majorCount = (output.analysis?.violations ?? []).filter((v) => v.severity === "MAJOR").length;
+    const minorCount = (output.analysis?.violations ?? []).filter((v) => v.severity === "MINOR").length;
+    const advisoryCount = (output.analysis?.violations ?? []).filter((v) => v.severity === "ADVISORY").length;
+
+    await admin.from("accessibility_scores").insert({
+      project_id: run.project_id,
+      commit_sha: run.head_commit_sha,
+      score,
+      total_issues: totalIssues,
+      critical_issues: criticalCount,
+      major_issues: majorCount,
+      minor_issues: minorCount,
+      advisory_issues: advisoryCount,
+      measured_at: new Date().toISOString(),
+    });
+  } catch (scoreErr: unknown) {
+    console.warn("[Pipeline Service] Score insert notice:", scoreErr instanceof Error ? scoreErr.message : scoreErr);
+  }
 }
 
 async function persistIssues(run: PipelineRunRecord, violations: AccessibilityViolation[]): Promise<PersistedIssue[]> {

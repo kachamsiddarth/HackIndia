@@ -177,6 +177,13 @@ export default function AssistantPage() {
 
       setMessages((prev) => [...prev, assistantMsg]);
 
+      // Handle autonomous browser navigation if agent triggered action
+      if (json.data?.navigationTarget) {
+        setTimeout(() => {
+          window.location.href = json.data.navigationTarget;
+        }, 1800);
+      }
+
       // Auto-speak response if enabled
       if (autoSpeak) {
         void speakText(reply, newMsgId, language);

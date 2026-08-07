@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { ScoreGauge, TimelineChart, type TimelineDataPoint } from "@/components/timeline";
 import { PRPanel } from "@/components/pull-requests";
 import { Skeleton } from "@/components/ui";
@@ -28,29 +28,38 @@ export default function ProjectTimelinePage(props: TimelinePageProps) {
   const [runs, setRuns] = useState<RunEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadTimeline() {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/projects/${projectId}/timeline`);
-        const json = await res.json();
-
-        if (json.data) {
-          setScores(json.data.scores || []);
-          setRuns(json.data.runs || []);
-        }
-      } catch (err) {
-        console.error("Failed to load timeline:", err);
-      } finally {
-        setLoading(false);
+  const loadTimeline = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/timeline`);
+      const json = await res.json();
+      if (json.data) {
+        setScores(json.data.scores || []);
+        // Sort runs newest-first for correct display
+        const sorted = [...(json.data.runs || [])].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setRuns(sorted);
       }
+    } catch (err) {
+      console.error("Failed to load timeline:", err);
+    } finally {
+      setLoading(false);
     }
-
-    void loadTimeline();
   }, [projectId]);
 
-  const latestScore = scores.length > 0 ? scores[scores.length - 1].score : 0;
-  const latestRunId = runs.length > 0 ? runs[0].id : undefined;
+  useEffect(() => {
+    setLoading(true);
+    void loadTimeline();
+    // Live polling every 8 seconds so pipeline status updates in real-time
+    const interval = setInterval(() => void loadTimeline(), 8000);
+    return () => clearInterval(interval);
+  }, [loadTimeline]);
+
+  const latestScore = scores.length > 0 ? scores[scores.length - 1].score : null;
+
+  // Pick the most recent run that actually has fixes generated (not an empty legacy run)
+  const latestRunWithFixes = runs.find((r) => r.fixesGenerated > 0 && r.status === "completed");
+  const latestRunId = latestRunWithFixes?.id ?? runs[0]?.id;
 
   return (
     <div className={styles.container}>
@@ -67,7 +76,7 @@ export default function ProjectTimelinePage(props: TimelinePageProps) {
         <Skeleton height={200} />
       ) : (
         <div className={styles.overviewGrid}>
-          <ScoreGauge score={latestScore} />
+          <ScoreGauge score={latestScore ?? 0} />
           <TimelineChart scores={scores} />
         </div>
       )}

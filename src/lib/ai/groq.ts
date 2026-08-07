@@ -25,16 +25,15 @@ function getGroqClient(keyIndex?: number): Groq {
   return new Groq({ apiKey });
 }
 
-export const DEFAULT_MODEL = "llama-3.3-70b-versatile";
+export const DEFAULT_MODEL = "llama-3.1-8b-instant";
 export const FAST_MODEL = "llama-3.1-8b-instant";
 
 /**
- * Active and supported Groq models ordered by capability & token budget.
- * (Decommissioned models like llama3-70b-8192 are removed).
+ * Fast, active Groq models for high-speed agentic processing.
  */
 export const FALLBACK_MODELS = [
-  "llama-3.3-70b-versatile",
   "llama-3.1-8b-instant",
+  "llama-3.3-70b-versatile",
   "mixtral-8x7b-32768",
 ];
 
@@ -63,7 +62,7 @@ export async function generateCompletion<T = string>(
   const {
     model = options.useFastModel ? FAST_MODEL : DEFAULT_MODEL,
     temperature = 0.2,
-    maxTokens = 4096,
+    maxTokens = 2048,
     systemPrompt = "You are AccessDiff AI, an expert accessibility engineer following WCAG 2.2 AA standards.",
     responseFormat,
   } = options;

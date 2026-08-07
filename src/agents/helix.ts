@@ -1,4 +1,5 @@
 import type { AgentOutput } from "./base";
+import { mutagentClient, getMutagentWorkspaces } from "@/lib/mutagent/client";
 import {
   AccessibilityAnalysisAgent,
   type AnalysisInput,
@@ -65,12 +66,21 @@ export interface HelixAgents {
 }
 
 /**
- * Local implementation of Mutagent's ADL model. The installed SDK supplies
- * workspace and agent management; this orchestrator owns application-specific
- * sequencing and preserves a typed governance trail for later persistence.
+ * Mutagent ADL (Agent Description Language) Orchestrator.
+ * Orchestrates multi-agent pipelines and reports every executed stage
+ * to the Mutagent platform via the official agents.createAgent API.
+ *
+ * Telemetry mechanism (confirmed by runtime SDK inspection v0.3.20):
+ * - @mutagent/sdk does NOT export initTracing, trace, withTrace, recordStage, or track.
+ * - The official ingestion path is mutagentClient.agents.createAgent({ metadata }) with
+ *   the x-organization-id and x-workspace-id headers provided per-request.
+ * - Organization and workspace IDs are resolved dynamically at run-start.
  */
 export class HelixOrchestrator {
   private readonly agents: HelixAgents;
+  /** Cached per-run org+workspace context, resolved once at run start. */
+  private mutagentOrgId: string | null = null;
+  private mutagentWsId: string | null = null;
 
   public constructor(agents: HelixAgents = HelixOrchestrator.createDefaultAgents()) {
     this.agents = agents;
@@ -90,6 +100,22 @@ export class HelixOrchestrator {
     };
   }
 
+  /** Resolve org and workspace IDs once per pipeline run. */
+  private async resolveMutagentContext(): Promise<void> {
+    try {
+      const orgs = await mutagentClient.organizations.listOrganizations();
+      const orgList = (orgs as unknown as { result?: { data?: Array<{ id?: string }> } }).result?.data ?? [];
+      this.mutagentOrgId = orgList[0]?.id ?? null;
+      if (this.mutagentOrgId) {
+        const wsRes = await getMutagentWorkspaces();
+        const wsList = (wsRes as unknown as { workspaces?: Array<{ id?: string }> }).workspaces ?? [];
+        this.mutagentWsId = wsList[0]?.id ?? null;
+      }
+    } catch {
+      // Non-fatal: telemetry is best-effort
+    }
+  }
+
   public async run(input: HelixPipelineInput): Promise<HelixPipelineOutput> {
     const stages: HelixStageResult[] = [];
     const decisions: GovernanceDecision[] = [];
@@ -102,34 +128,37 @@ export class HelixOrchestrator {
     let verification: VerificationOutput | null = null;
     let error: string | null = null;
 
+    // Resolve Mutagent org/workspace context once at run start (non-blocking)
+    await this.resolveMutagentContext();
+
     try {
       const repositoryResult = await this.agents.repository.run(input.repository);
-      this.record("SPEC", repositoryResult, stages, decisions, this.agents.repository.name);
+      this.record("SPEC", repositoryResult, stages, decisions, this.agents.repository.name, input.pipelineId);
       repository = this.requireData(repositoryResult);
 
       const diffResult = await this.agents.gitDiff.run(input.gitDiff);
-      this.record("SPEC", diffResult, stages, decisions, this.agents.gitDiff.name);
+      this.record("SPEC", diffResult, stages, decisions, this.agents.gitDiff.name, input.pipelineId);
       diff = this.requireData(diffResult);
 
       const analysisInput: AnalysisInput = { patches: diff.patches };
       const analysisResult = await this.agents.analysis.run(analysisInput);
-      this.record("BUILD", analysisResult, stages, decisions, this.agents.analysis.name);
+      this.record("BUILD", analysisResult, stages, decisions, this.agents.analysis.name, input.pipelineId);
       analysis = this.requireData(analysisResult);
 
       const explanationResult = await this.agents.explanation.run({ violations: analysis.violations });
-      this.record("BUILD", explanationResult, stages, decisions, this.agents.explanation.name);
+      this.record("BUILD", explanationResult, stages, decisions, this.agents.explanation.name, input.pipelineId);
       explanations = this.requireData(explanationResult);
 
       const fixResult = await this.agents.fix.run({
         enrichedViolations: explanations.enrichedViolations,
         patches: diff.patches,
       });
-      this.record("BUILD", fixResult, stages, decisions, this.agents.fix.name);
+      this.record("BUILD", fixResult, stages, decisions, this.agents.fix.name, input.pipelineId);
       fixes = this.requireData(fixResult).fixes;
 
       for (let iteration = 1; iteration <= maxIterations; iteration += 1) {
         const verificationResult = await this.agents.verification.run({ fixes });
-        this.record("EVALUATE", verificationResult, stages, decisions, this.agents.verification.name);
+        this.record("EVALUATE", verificationResult, stages, decisions, this.agents.verification.name, input.pipelineId);
         verification = this.requireData(verificationResult);
 
         if (verification.allVerified) {
@@ -142,11 +171,11 @@ export class HelixOrchestrator {
         }
 
         const diagnosisResult = await this.agents.diagnosis.run({ failedVerifications, fixes });
-        this.record("DIAGNOSE", diagnosisResult, stages, decisions, this.agents.diagnosis.name);
+        this.record("DIAGNOSE", diagnosisResult, stages, decisions, this.agents.diagnosis.name, input.pipelineId);
         const diagnosis: DiagnosisOutput = this.requireData(diagnosisResult);
 
         const optimizationResult = await this.agents.optimization.run({ diagnoses: diagnosis.diagnoses, fixes });
-        this.record("OPTIMIZE", optimizationResult, stages, decisions, this.agents.optimization.name);
+        this.record("OPTIMIZE", optimizationResult, stages, decisions, this.agents.optimization.name, input.pipelineId);
         const optimization: OptimizationOutput = this.requireData(optimizationResult);
         if (optimization.optimizedFixes.length === 0) {
           break;
@@ -162,7 +191,7 @@ export class HelixOrchestrator {
       pipelineId: input.pipelineId,
       decisions,
     });
-    this.record("GOVERNANCE", governanceResult, stages, decisions, this.agents.governance.name);
+    this.record("GOVERNANCE", governanceResult, stages, decisions, this.agents.governance.name, input.pipelineId);
     const governanceRecords = governanceResult.data?.records ?? [];
 
     return {
@@ -184,7 +213,8 @@ export class HelixOrchestrator {
     result: AgentOutput<T>,
     stages: HelixStageResult[],
     decisions: GovernanceDecision[],
-    agentName: string
+    agentName: string,
+    pipelineId: string
   ): void {
     stages.push({
       stage,
@@ -202,6 +232,57 @@ export class HelixOrchestrator {
       reasoning: result.reasoning,
       output: result.data,
     });
+
+    // Report stage telemetry to the Mutagent platform via the official SDK.
+    // We maintain persistent, canonical Agent definitions (1 per agent role, e.g., 'accessdiff-repositoryagent')
+    // and update their metadata on every run execution to avoid duplicate slug creation.
+    if (this.mutagentOrgId) {
+      const canonicalSlug = `accessdiff-${agentName}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const headers: Record<string, string> = { "x-organization-id": this.mutagentOrgId };
+      if (this.mutagentWsId) headers["x-workspace-id"] = this.mutagentWsId;
+
+      const metadata = {
+        pipelineId,
+        adlcStage: stage,
+        agentName,
+        status: result.success ? "COMPLETED" : "FAILED",
+        confidence: result.confidence,
+        durationMs: result.duration_ms,
+        reasoning: result.reasoning,
+        lastExecutedAt: new Date().toISOString(),
+      };
+
+      (async () => {
+        try {
+          const existingAgent = await mutagentClient.agents.getAgentBySlug({ slug: canonicalSlug }, { headers });
+          if (existingAgent && existingAgent.id) {
+            await mutagentClient.agents.updateAgent({
+              id: existingAgent.id,
+              body: {
+                name: agentName,
+                description: `ADLC ${stage} stage | Last Run: ${pipelineId} | ${result.success ? "COMPLETED" : "FAILED"} in ${result.duration_ms}ms`,
+                metadata,
+              },
+            }, { headers });
+          }
+        } catch {
+          // If agent doesn't exist yet, register it once as the canonical definition
+          try {
+            await mutagentClient.agents.createAgent({
+              name: agentName,
+              slug: canonicalSlug,
+              systemPrompt: `AccessDiff ADLC agent for ${agentName} (${stage} stage).`,
+              description: `ADLC ${stage} stage | Initialized by AccessDiff Pipeline`,
+              metadata,
+            }, { headers });
+          } catch (createErr: unknown) {
+            console.warn("[Mutagent] Agent definition creation warning:", createErr instanceof Error ? createErr.message : createErr);
+          }
+        }
+      })().catch((err: unknown) => {
+        console.warn("[Mutagent] Stage telemetry sync warning:", err instanceof Error ? err.message : err);
+      });
+    }
   }
 
   private requireData<T>(result: AgentOutput<T>): T {
@@ -218,3 +299,4 @@ export class HelixOrchestrator {
     return currentFixes.map((fix) => optimizedByViolation.get(fix.violationId) ?? fix);
   }
 }
+

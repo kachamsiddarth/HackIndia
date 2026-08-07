@@ -65,25 +65,26 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
     }
 
-    // Generate AI response using Groq
-    const systemPrompt = `You are the AccessDiff AI Assistant powered by Sarvam AI. You help developers fix accessibility issues in their web applications following WCAG 2.2 AA standards.
-You can explain accessibility violations, suggest fixes, interpret WCAG rules, and guide developers through remediation.
-Be concise, practical, and provide code examples when relevant.${contextStr}`;
+    // Instantiate Sarvam AI Browser Agent to orchestrate application actions
+    const { SarvamBrowserAgent } = await import("@/lib/sarvam/browser-agent");
+    const browserAgent = new SarvamBrowserAgent();
 
-    const aiResponse = await generateCompletion<string>(aiInput, {
-      systemPrompt,
-      temperature: 0.4,
-      maxTokens: 2048,
-      useFastModel: true,
+    const agentResult = await browserAgent.planAndExecute(aiInput, {
+      userId: user.id,
+      projectId: body.projectId,
+      currentPath: (body.context as any)?.currentPath,
+      repoName: (body.context as any)?.repoName,
+      pipelineRunId: (body.context as any)?.pipelineRunId,
     });
 
+    let finalResponse = agentResult.responseText;
+
     // Translate response back to user's language if needed
-    let finalResponse = aiResponse;
     if (lang !== "en-IN") {
       try {
-        finalResponse = await translateText(aiResponse, "en", lang.split("-")[0]);
+        finalResponse = await translateText(agentResult.responseText, "en", lang.split("-")[0]);
       } catch {
-        finalResponse = aiResponse; // fallback
+        finalResponse = agentResult.responseText; // fallback
       }
     }
 
@@ -103,12 +104,17 @@ Be concise, practical, and provide code examples when relevant.${contextStr}`;
         role: "assistant",
         content: finalResponse,
         language: lang,
-        context: null,
+        context: agentResult.navigationTarget ? { navigationTarget: agentResult.navigationTarget } : null,
       },
     ]);
 
     return NextResponse.json({
-      data: { reply: finalResponse, language: lang },
+      data: {
+        reply: finalResponse,
+        language: lang,
+        navigationTarget: agentResult.navigationTarget,
+        actionResults: agentResult.actionResults,
+      },
       error: null,
     });
   } catch (caught: unknown) {

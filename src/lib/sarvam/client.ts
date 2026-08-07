@@ -108,8 +108,8 @@ export async function textToSpeech(
     body: JSON.stringify({
       inputs: [text],
       target_language_code: targetLang,
-      speaker: "meera",
-      model: "bulbul:v1",
+      speaker: "anushka",
+      model: "bulbul:v2",
     }),
   });
 

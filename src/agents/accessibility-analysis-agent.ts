@@ -21,6 +21,7 @@ export interface AnalysisInput {
     filename: string;
     patch: string;
     status: string;
+    content?: string;
   }>;
 }
 
@@ -86,13 +87,13 @@ Return a JSON object:
       let aiViolations: AccessibilityViolation[] = [];
       try {
         const result = await generateCompletion<{ violations: AccessibilityViolation[] }>(prompt, {
-          systemPrompt: "You are an expert accessibility audit agent strictly enforcing WCAG 2.2 AA standards.",
+          systemPrompt: "You are an expert accessibility audit agent strictly enforcing WCAG 2.2 AA standards. Inspect code for missing image alt text, unlabelled buttons, input fields without labels, poor contrast, and missing keyboard events.",
           responseFormat: { type: "json_object" },
           temperature: 0.1,
         });
         aiViolations = result.violations ?? [];
-      } catch {
-        // Deterministic checks still produce actionable results when the LLM is unavailable.
+      } catch (err: unknown) {
+        console.warn("[AccessibilityAnalysisAgent] AI completion notice:", err instanceof Error ? err.message : err);
       }
 
       const violations = deduplicateViolations([...ruleBasedViolations, ...axeAudit.violations, ...aiViolations]);

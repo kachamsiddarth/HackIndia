@@ -19,6 +19,7 @@ export interface GitDiffOutput {
     filename: string;
     patch: string;
     status: string;
+    content?: string;
   }>;
 }
 
@@ -43,13 +44,24 @@ export class GitDiffAgent extends BaseAgent<GitDiffInput, GitDiffOutput> {
         uiExtensions.some((ext) => file.filename.toLowerCase().endsWith(ext))
       );
 
-      const patches = uiFiles
-        .filter((file) => file.patch)
-        .map((file) => ({
-          filename: file.filename,
-          patch: file.patch || "",
-          status: file.status,
-        }));
+      const patches = await Promise.all(
+        uiFiles.slice(0, 20).map(async (file) => {
+          let content: string | undefined;
+          if (!file.patch || file.patch.length < 500) {
+            try {
+              content = await github.getFileContent(input.owner, input.repo, file.filename, input.headCommit);
+            } catch {
+              content = undefined;
+            }
+          }
+          return {
+            filename: file.filename,
+            patch: file.patch || "",
+            status: file.status,
+            content,
+          };
+        })
+      );
 
       return {
         data: {

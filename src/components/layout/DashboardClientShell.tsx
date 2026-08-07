@@ -2,6 +2,7 @@
 
 import React, { type ReactNode } from "react";
 import { Sidebar, Header } from "@/components/layout";
+import { GlobalVoiceAgent } from "@/components/voice/GlobalVoiceAgent";
 import type { UserProfile } from "@/components/layout/Sidebar/Sidebar";
 import styles from "@/app/(dashboard)/layout.module.css";
 
@@ -20,6 +21,7 @@ export function DashboardClientShell({
       <div className={styles.mainWrapper}>
         <Header />
         <main className={styles.content}>{children}</main>
+        <GlobalVoiceAgent />
       </div>
     </div>
   );

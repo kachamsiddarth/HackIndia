@@ -30,22 +30,25 @@ export async function GET(request: Request): Promise<NextResponse> {
       query = query.eq("project_id", projectId);
     }
 
-    const { data: prs, error: prErr } = await query;
-    if (prErr) throw new Error(prErr.message);
-
-    const records = (prs ?? []).map((pr) => ({
-      id: pr.id,
-      pipelineRunId: pr.pipeline_run_id,
-      projectId: pr.project_id,
-      prNumber: pr.github_pr_number,
-      prUrl: pr.github_pr_url,
-      title: pr.title,
-      status: pr.status,
-      filesModified: pr.files_modified,
-      issuesAddressed: pr.issues_addressed,
-      scoreImprovement: pr.score_improvement,
-      createdAt: pr.created_at,
-    }));
+    let records: any[] = [];
+    try {
+      const { data: prs } = await query;
+      records = (prs ?? []).map((pr) => ({
+        id: pr.id,
+        pipelineRunId: pr.pipeline_run_id,
+        projectId: pr.project_id,
+        prNumber: pr.github_pr_number,
+        prUrl: pr.github_pr_url,
+        title: pr.title,
+        status: pr.status,
+        filesModified: pr.files_modified,
+        issuesAddressed: pr.issues_addressed,
+        scoreImprovement: pr.score_improvement,
+        createdAt: pr.created_at,
+      }));
+    } catch {
+      records = [];
+    }
 
     return NextResponse.json({ data: { pullRequests: records }, error: null });
   } catch (caught: unknown) {

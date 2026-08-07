@@ -30,6 +30,8 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("AccessDiff: Accessibility Fixes");
   const [successUrl, setSuccessUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasFixes, setHasFixes] = useState(false);
 
   useEffect(() => {
     async function loadPRs() {
@@ -47,9 +49,31 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
       }
     }
     void loadPRs();
+    const interval = setInterval(() => void loadPRs(), 15000);
+    return () => clearInterval(interval);
   }, [projectId]);
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Check if the current run has fixes available
+  useEffect(() => {
+    if (!pipelineRunId) return;
+    async function checkFixes() {
+      try {
+        const res = await fetch(`/api/pipeline/${pipelineRunId}/results`);
+        const json = await res.json();
+        const fixes = json.data?.fixes ?? [];
+        setHasFixes(fixes.length > 0);
+        // Auto-open form if fixes exist and no PR yet created for this run
+        if (fixes.length > 0) {
+          const alreadyHasPR = pullRequests.some((pr) => pr.pipelineRunId === pipelineRunId);
+          if (!alreadyHasPR) setShowForm(true);
+        }
+      } catch {
+        setHasFixes(false);
+      }
+    }
+    void checkFixes();
+  }, [pipelineRunId, pullRequests.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const handleCreatePR = async (directCommit = false) => {
     if (!pipelineRunId) return;
@@ -103,7 +127,7 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
     <div className={styles.container}>
       <div className={styles.header}>
         <span className={styles.title}>Pull Requests</span>
-        {pipelineRunId && !showForm && (
+        {pipelineRunId && !showForm && hasFixes && (
           <Button variant="primary" size="sm" onClick={() => setShowForm(true)}>
             + Create PR
           </Button>
@@ -117,6 +141,12 @@ export default function PRPanel({ projectId, pipelineRunId }: PRPanelProps): Rea
             View on GitHub →
           </a>
         </div>
+      )}
+
+      {pipelineRunId && !hasFixes && !showForm && pullRequests.length === 0 && (
+        <p style={{ color: "#f87171", fontSize: "0.8rem", margin: "0 0 0.5rem 0" }}>
+          ⚠️ No accessibility fixes found for this pipeline run. Run the pipeline first.
+        </p>
       )}
 
       {showForm && (

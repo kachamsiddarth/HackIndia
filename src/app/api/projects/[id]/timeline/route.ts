@@ -21,21 +21,31 @@ export async function GET(
   try {
     const admin = createAdminClient();
 
-    // Fetch accessibility_scores for this project, ordered by time
-    const { data: scores } = await admin
-      .from("accessibility_scores")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("measured_at", { ascending: true });
+    let scores: any[] = [];
+    try {
+      const scoreRes = await admin
+        .from("accessibility_scores")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("measured_at", { ascending: true });
+      if (scoreRes.data) scores = scoreRes.data;
+    } catch {
+      scores = [];
+    }
 
-    // Fetch pipeline runs for this project to build timeline events
-    const { data: runs } = await admin
-      .from("pipeline_runs")
-      .select("id, status, total_issues, fixes_generated, fixes_verified, summary, created_at, completed_at, base_commit_sha, head_commit_sha")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: true });
+    let runs: any[] = [];
+    try {
+      const runRes = await admin
+        .from("pipeline_runs")
+        .select("id, status, total_issues, fixes_generated, fixes_verified, summary, created_at, completed_at, base_commit_sha, head_commit_sha")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: true });
+      if (runRes.data) runs = runRes.data;
+    } catch {
+      runs = [];
+    }
 
-    const scoreTimeline = (scores ?? []).map((s) => ({
+    const scoreTimeline = scores.map((s) => ({
       id: s.id,
       commitSha: s.commit_sha,
       score: Number(s.score),
@@ -47,7 +57,7 @@ export async function GET(
       measuredAt: s.measured_at,
     }));
 
-    const runTimeline = (runs ?? []).map((r) => ({
+    const runTimeline = runs.map((r) => ({
       id: r.id,
       status: r.status,
       totalIssues: r.total_issues,
