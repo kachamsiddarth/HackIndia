@@ -40,4 +40,11 @@ export interface ActionResult {
   message: string;
   data?: any;
   navigationTarget?: string;
+  /**
+   * For ImportRepositoryTool: set to true when the requested project was
+   * already imported by this user, so no new row was written.  Callers
+   * can use this flag to skip duplicate-success toasts or skip pipeline
+   * re-runs that were already queued against the existing project.
+   */
+  alreadyImported?: boolean;
 }

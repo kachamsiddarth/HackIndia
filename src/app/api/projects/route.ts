@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     const [owner, repo] = repo_name.split("/");
 
-    // Fetch user token
+    // Fetch user token + github username
     const { data: profile } = await supabase
       .from("users")
       .select("github_token")
@@ -67,6 +67,23 @@ export async function POST(request: Request) {
 
     const token = profile?.github_token || process.env.GITHUB_CLIENT_SECRET;
     const github = new GitHubClient(token || "");
+
+    // Fast path: already imported? return existing row to avoid duplicate-key errors.
+    const { data: existing } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("github_repo", repo_name)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({
+        data: existing,
+        alreadyImported: true,
+        error: null,
+      });
+    }
 
     // 1. Fetch repo info
     const repoDetails = await github.getRepo(owner, repo);
@@ -100,25 +117,28 @@ export async function POST(request: Request) {
       };
     }
 
-    // 5. Save project to database
+    // 5. Save project to database with explicit conflict target
     const { data: project, error: dbError } = await supabase
       .from("projects")
-      .upsert({
-        user_id: user.id,
-        github_repo: repo_name,
-        name: repoDetails.name,
-        default_branch: repoDetails.default_branch,
-        framework: analysis.framework,
-        tech_stack: {
-          language: analysis.language,
-          componentCount: analysis.componentCount,
-          stars: repoDetails.stargazers_count,
+      .upsert(
+        {
+          user_id: user.id,
+          github_repo: repo_name,
+          name: repoDetails.name,
+          default_branch: repoDetails.default_branch,
+          framework: analysis.framework,
+          tech_stack: {
+            language: analysis.language,
+            componentCount: analysis.componentCount,
+            stars: repoDetails.stargazers_count,
+          },
+          risk_areas: analysis.riskAreas,
+          ai_summary: analysis.aiSummary,
+          accessibility_score: analysis.accessibilityScoreEstimate,
+          updated_at: new Date().toISOString(),
         },
-        risk_areas: analysis.riskAreas,
-        ai_summary: analysis.aiSummary,
-        accessibility_score: analysis.accessibilityScoreEstimate,
-        updated_at: new Date().toISOString(),
-      })
+        { onConflict: "user_id, github_repo", ignoreDuplicates: false }
+      )
       .select()
       .single();
 

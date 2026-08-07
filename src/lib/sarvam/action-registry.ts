@@ -27,21 +27,10 @@ export class ActionRegistry {
 
     switch (tool) {
       case "ImportRepositoryTool": {
-        let repoName = params.repoName || context.repoName;
-
-        // If repoName is missing or invalid, default to kachamsiddarth/acessDemo or user's active projects
-        if (!repoName || repoName === "user input required") {
-          repoName = "kachamsiddarth/acessDemo";
-        }
-
-        if (!repoName.includes("/")) {
-          repoName = `kachamsiddarth/${repoName}`;
-        }
-        
-        // Fetch user GitHub token
+        // Fetch user GitHub token + username first
         const { data: dbUser } = await admin
           .from("users")
-          .select("github_token")
+          .select("github_token, github_username")
           .eq("id", context.userId)
           .single();
 
@@ -49,9 +38,116 @@ export class ActionRegistry {
           return { success: false, message: "GitHub token missing for user." };
         }
 
-        const [owner, repo] = repoName.split("/");
+        const userLogin = dbUser.github_username || "kachamsiddarth";
         const github = new GitHubClient(dbUser.github_token);
 
+        // ------------------------------------------------------------------
+        // 1. Resolve requested repo -> real owner/repo
+        //    Allows free-form inputs: "test2", "test2 repo", "kachamsiddarth/test2"
+        // ------------------------------------------------------------------
+        let desiredRepo = (params.repoName || context.repoName || "").trim();
+        let resolvedOwner: string = userLogin;
+        let resolvedRepo: string | undefined;
+
+        if (!desiredRepo || desiredRepo === "user input required") {
+          // No repo provided -> pick the most recently updated user repo
+          try {
+            const userRepos = await github.getUserRepos("updated");
+            if (userRepos.length === 0) {
+              return {
+                success: false,
+                message:
+                  "No accessible GitHub repositories were found for your account. Please create or star a repo first, or specify the full 'owner/repo' name.",
+              };
+            }
+            const latest = userRepos[0];
+            resolvedOwner = latest.owner.login;
+            resolvedRepo = latest.name;
+            desiredRepo = latest.full_name;
+          } catch {
+            return {
+              success: false,
+              message:
+                "Could not list your GitHub repositories. Please specify the repository explicitly as 'owner/repo'.",
+            };
+          }
+        } else if (desiredRepo.includes("/")) {
+          const [o, r] = desiredRepo.split("/").map((p: string) => p.trim());
+          resolvedOwner = o;
+          resolvedRepo = r;
+        } else {
+          // Bare name like "test2" -> fuzzy match against user's actual repo list
+          const normalizedQuery = desiredRepo.toLowerCase().replace(/[^a-z0-9]/g, "");
+          try {
+            const candidates = await github.getUserRepos("updated");
+            let best: (typeof candidates)[number] | undefined;
+            let bestScore = 0;
+            for (const r of candidates) {
+              const hay = r.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+              if (!hay) continue;
+              if (hay === normalizedQuery) {
+                best = r;
+                bestScore = Infinity;
+                break;
+              }
+              if (hay.includes(normalizedQuery) || normalizedQuery.includes(hay)) {
+                const score = hay.length + normalizedQuery.length - Math.abs(hay.length - normalizedQuery.length);
+                if (score > bestScore) {
+                  best = r;
+                  bestScore = score;
+                }
+              }
+            }
+            if (best) {
+              resolvedOwner = best.owner.login;
+              resolvedRepo = best.name;
+              desiredRepo = best.full_name;
+            } else {
+              resolvedRepo = desiredRepo;
+            }
+          } catch {
+            resolvedRepo = desiredRepo;
+          }
+        }
+
+        const repoName = `${resolvedOwner}/${resolvedRepo}`;
+        const owner = resolvedOwner;
+        const repo = resolvedRepo || "";
+
+        if (!owner || !repo) {
+          return {
+            success: false,
+            message:
+              "Could not determine which repository to import. Try saying the full name like 'owner/repo-name'.",
+          };
+        }
+
+        // ------------------------------------------------------------------
+        // 2. Fast path: already imported? return the existing project row.
+        //    This avoids duplicate-key violations on the (user_id, github_repo)
+        //    unique constraint while still giving a UX-friendly answer.
+        // ------------------------------------------------------------------
+        const { data: existing } = await admin
+          .from("projects")
+          .select("*")
+          .eq("user_id", context.userId)
+          .eq("github_repo", repoName)
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          return {
+            success: true,
+            message: `Repository ${repoName} is already imported. Accessibility score: ${existing.accessibility_score}%.`,
+            data: existing,
+            navigationTarget: `/projects/${existing.id}`,
+            alreadyImported: true,
+          };
+        }
+
+        // ------------------------------------------------------------------
+        // 3. Fresh import path
+        // ------------------------------------------------------------------
         try {
           const repoData = await github.getRepo(owner, repo);
           const defaultBranch = repoData.default_branch || "main";
@@ -79,22 +175,25 @@ export class ActionRegistry {
 
           const { data: inserted, error } = await admin
             .from("projects")
-            .upsert({
-              user_id: context.userId,
-              name: repoData.name,
-              github_repo: repoName,
-              default_branch: defaultBranch,
-              framework: summary.framework,
-              tech_stack: {
-                language: summary.language,
-                componentCount: summary.componentCount,
-                stars: repoData.stargazers_count,
+            .upsert(
+              {
+                user_id: context.userId,
+                name: repoData.name,
+                github_repo: repoName,
+                default_branch: defaultBranch,
+                framework: summary.framework,
+                tech_stack: {
+                  language: summary.language,
+                  componentCount: summary.componentCount,
+                  stars: repoData.stargazers_count,
+                },
+                risk_areas: summary.riskAreas,
+                ai_summary: summary.aiSummary,
+                accessibility_score: summary.accessibilityScoreEstimate,
+                updated_at: new Date().toISOString(),
               },
-              risk_areas: summary.riskAreas,
-              ai_summary: summary.aiSummary,
-              accessibility_score: summary.accessibilityScoreEstimate,
-              updated_at: new Date().toISOString(),
-            })
+              { onConflict: "user_id, github_repo", ignoreDuplicates: false }
+            )
             .select()
             .single();
 
