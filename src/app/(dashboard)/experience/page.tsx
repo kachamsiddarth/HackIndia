@@ -86,27 +86,64 @@ export default function ExperienceModePage() {
     }).catch((e: unknown) => setError(e instanceof Error ? e.message : "Unable to load preview."));
   }, [filePath, projectId]);
 
-  // Stop speech when mode changes
-  useEffect(() => {
-    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
-    setSpeaking(false);
-    setCurrentElementIndex(0);
-  }, [mode, filePath]);
-
   const elements = useMemo(() => extractAccessibleElements(source), [source]);
   const selectedProject = projects.find((p) => p.id === projectId);
 
-  // Screen reader: speak current element
+  // Sarvam AI TTS playback function for Screen Reader Simulation
+  const speakWithSarvam = async (text: string) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeaking(true);
+
+    try {
+      const res = await fetch("/api/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "tts", text: text.slice(0, 450), language: "en-IN" }),
+      });
+      const json = await res.json();
+      if (json.data?.audioBase64) {
+        const audio = new Audio(`data:audio/wav;base64,${json.data.audioBase64}`);
+        audio.onended = () => setSpeaking(false);
+        await audio.play();
+        return;
+      }
+    } catch {
+      // Fallback to Web Speech API
+    }
+
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-IN";
+      utterance.rate = 0.9;
+      utterance.onend = () => setSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // When switching to 'screen-reader' mode or changing selected preview file, automatically analyze and narrate using Sarvam AI
+  useEffect(() => {
+    if (mode === "screen-reader" && source && selectedProject) {
+      const buttons = (source.match(/<button\b/gi) ?? []).length;
+      const links = (source.match(/<a\b/gi) ?? []).length;
+      const inputs = (source.match(/<(input|select|textarea)\b/gi) ?? []).length;
+      const h1Match = source.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+      const title = h1Match ? h1Match[1].replace(/<[^>]+>/g, "").trim() : selectedProject.name;
+
+      const analysisText = `Sarvam AI Accessibility Analysis for ${selectedProject.github_repo}, preview file ${filePath}. This webpage title is ${title}. It contains ${buttons} interactive buttons, ${links} navigation links, and ${inputs} form inputs. ${elements.length} accessible ARIA targets are detected for screen reading.`;
+      
+      void speakWithSarvam(analysisText);
+    } else {
+      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+      setSpeaking(false);
+    }
+  }, [mode, filePath, source, elements, selectedProject]);
+
+  // Screen reader: speak current element via Sarvam AI
   const speakElement = (el: AccessibleElement) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
     const text = `${el.role}: ${el.label}`;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-IN";
-    utterance.rate = 0.9;
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    void speakWithSarvam(text);
   };
 
   const handleScreenReaderNext = () => {
@@ -227,6 +264,16 @@ export default function ExperienceModePage() {
         </Card>
       )}
 
+      {/* Dedicated Experience Mode Voice Assistant for Repository Preview Q&A */}
+      <Card className={styles.assistCard} style={{ marginTop: "16px", border: "1px solid #3f3f46" }}>
+        <h2>🎙️ Experience Voice Assistant (Repository Preview Q&A)</h2>
+        <p className={styles.srHint}>
+          Ask follow-up voice or text questions specifically about the live preview webpage of <strong>{selectedProject?.github_repo ?? "the selected repository"}</strong>.
+        </p>
+
+        <ExperienceVoiceQnA selectedProject={selectedProject} filePath={filePath} source={source} speakWithSarvam={speakWithSarvam} />
+      </Card>
+
       {/* Keyboard Navigation Panel */}
       {mode === "keyboard" && source && (
         <Card className={styles.assistCard}>
@@ -242,6 +289,160 @@ export default function ExperienceModePage() {
             ))}
           </ol>
         </Card>
+      )}
+    </div>
+  );
+}
+
+function ExperienceVoiceQnA({ selectedProject, filePath, source, speakWithSarvam }: {
+  selectedProject: any;
+  filePath: string;
+  source: string;
+  speakWithSarvam: (t: string) => Promise<void>;
+}) {
+  const [question, setQuestion] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [answer, setAnswer] = useState<string | null>(null);
+
+  const handleSendQuestion = async (text: string) => {
+    if (!text.trim() || loading) return;
+    setLoading(true);
+    setAnswer(null);
+
+    const repoName = selectedProject?.github_repo || selectedProject?.name || "Imported Repository";
+    const textSnippet = source.slice(0, 1500);
+
+    const contextPrompt = `[Live Webpage Preview Context for ${repoName}, file: ${filePath}]. Code/Text snippet: ${textSnippet}. Question about this webpage: ${text}`;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: contextPrompt,
+          language: "en-IN",
+          mode: "preview_qa",
+        }),
+      });
+
+      const json = await res.json();
+      const replyText = json.data?.reply || json.error?.message || "I've analyzed the live preview for this webpage.";
+      setAnswer(replyText);
+      void speakWithSarvam(replyText);
+    } catch {
+      const fallback = "Unable to analyze the live preview follow-up. Please try again.";
+      setAnswer(fallback);
+      void speakWithSarvam(fallback);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startVoiceInput = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    try {
+      const rec = new SpeechRec();
+      rec.lang = "en-IN";
+      rec.interimResults = false;
+
+      rec.onstart = () => setRecording(true);
+      rec.onresult = (e: any) => {
+        const spokenText = e.results[0][0].transcript;
+        setQuestion(spokenText);
+        void handleSendQuestion(spokenText);
+      };
+      rec.onerror = () => setRecording(false);
+      rec.onend = () => setRecording(false);
+
+      rec.start();
+    } catch {
+      setRecording(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "12px" }}>
+      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={startVoiceInput}
+          disabled={loading}
+          style={{
+            background: recording ? "#ef4444" : "#f97316",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            padding: "8px 14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          🎤 {recording ? "Listening..." : "Ask Voice Question"}
+        </button>
+
+        <input
+          type="text"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder={`Ask anything about ${selectedProject?.github_repo || "this webpage"} (e.g. "What is our company about?")`}
+          style={{
+            flex: 1,
+            background: "#09090b",
+            border: "1px solid #3f3f46",
+            color: "#f4f4f5",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "0.85rem",
+            outline: "none",
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void handleSendQuestion(question);
+            }
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={() => void handleSendQuestion(question)}
+          disabled={loading || !question.trim()}
+          style={{
+            background: "#2563eb",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            padding: "8px 16px",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            opacity: loading || !question.trim() ? 0.6 : 1,
+          }}
+        >
+          {loading ? "Analyzing..." : "Ask"}
+        </button>
+      </div>
+
+      {answer && (
+        <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "8px", padding: "12px", marginTop: "4px" }}>
+          <strong style={{ color: "#f97316", fontSize: "0.85rem", display: "block", marginBottom: "4px" }}>
+            🎙️ Sarvam AI Preview Explanation:
+          </strong>
+          <p style={{ color: "#e4e4e7", fontSize: "0.85rem", margin: 0, lineHeight: 1.5 }}>
+            {answer}
+          </p>
+        </div>
       )}
     </div>
   );

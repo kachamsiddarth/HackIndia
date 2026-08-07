@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import styles from "./GlobalVoiceAgent.module.css";
 
@@ -13,6 +13,7 @@ export function GlobalVoiceAgent() {
   const [language, setLanguage] = useState<string>("en-IN");
 
   const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef("");
   const pathname = usePathname();
 
   // Extract project/repo context from current URL if available
@@ -25,6 +26,36 @@ export function GlobalVoiceAgent() {
     return {
       currentPath: pathname,
       projectId,
+    };
+  };
+
+  // Inspect the Live Repository Preview iframe if on /experience page
+  const inspectLiveRepositoryPreview = () => {
+    if (!pathname.includes("/experience")) return null;
+
+    const iframe = document.querySelector("iframe") as HTMLIFrameElement | null;
+    if (!iframe || !iframe.contentDocument) return null;
+
+    const doc = iframe.contentDocument;
+    const title = doc.querySelector("h1, h2, h3")?.textContent || "Imported Repository UI";
+    
+    // Extract full text content & sections
+    const headings = Array.from(doc.querySelectorAll("h1, h2, h3, h4")).map(h => h.textContent?.trim()).filter(Boolean);
+    const textSnippet = (doc.body?.innerText || "").slice(0, 1500);
+
+    // Find interactive elements inside preview
+    const buttons = Array.from(doc.querySelectorAll("button")).map((b, i) => b.textContent?.trim() || `Button ${i + 1}`);
+    const links = Array.from(doc.querySelectorAll("a")).map((a, i) => a.textContent?.trim() || `Link ${i + 1}`);
+    const inputs = Array.from(doc.querySelectorAll("input, select, textarea")).map((inp: any, i) => inp.placeholder || inp.name || `Input ${i + 1}`);
+
+    return {
+      title,
+      headings,
+      textSnippet,
+      buttons,
+      links,
+      inputs,
+      allInteractive: [...buttons, ...links, ...inputs]
     };
   };
 
@@ -61,13 +92,24 @@ export function GlobalVoiceAgent() {
     setProcessing(true);
     setTranscript(commandText);
 
+    // Special behavior for Experience Mode: pass live repository preview content as context into agent query
+    let previewContextStr = "";
+    if (pathname.includes("/experience")) {
+      const previewData = inspectLiveRepositoryPreview();
+      if (previewData) {
+        previewContextStr = `[Active Webpage Live Preview Context - Title: "${previewData.title}". Headings: ${previewData.headings.join(", ")}. Text Content: ${previewData.textSnippet}. Interactive Elements: ${previewData.allInteractive.join(", ")}]`;
+      }
+    }
+
     try {
       const context = extractContextFromUrl();
+      const messageWithPreviewContext = previewContextStr ? `${previewContextStr} User Question: ${commandText}` : commandText;
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: commandText,
+          message: messageWithPreviewContext,
           language,
           projectId: context.projectId,
           context,
@@ -93,8 +135,6 @@ export function GlobalVoiceAgent() {
       setProcessing(false);
     }
   };
-
-  const transcriptRef = useRef("");
 
   const toggleRecording = () => {
     if (recording) {
@@ -136,7 +176,11 @@ export function GlobalVoiceAgent() {
         transcriptRef.current = text;
       };
 
-      recognition.onerror = () => setRecording(false);
+      recognition.onerror = (err: any) => {
+        console.warn("Speech recognition error:", err);
+        setRecording(false);
+      };
+
       recognition.onend = () => {
         setRecording(false);
         const finalCmd = transcriptRef.current.trim();
@@ -148,7 +192,8 @@ export function GlobalVoiceAgent() {
       recognition.start();
       setRecording(true);
       setIsOpen(true);
-    } catch {
+    } catch (e) {
+      console.error("Failed to start speech recognition:", e);
       setRecording(false);
     }
   };
@@ -158,7 +203,7 @@ export function GlobalVoiceAgent() {
       {isOpen && (
         <div className={styles.popover}>
           <div className={styles.popoverHeader}>
-            <span className={styles.title}>🎙️ Sarvam AI Operator</span>
+            <span className={styles.title}>🎙️ DIFF — Voice Accessibility Agent</span>
             <button className={styles.closeBtn} onClick={() => setIsOpen(false)}>
               ✕
             </button>
@@ -189,12 +234,57 @@ export function GlobalVoiceAgent() {
 
             {lastReply && (
               <div className={styles.replyBox}>
-                <span className={styles.label}>Sarvam Operator:</span> {lastReply}
+                <span className={styles.label}>DIFF Agent:</span> {lastReply}
               </div>
             )}
 
-            {processing && <div className={styles.statusText}>Processing command & orchestrating tools...</div>}
-            {recording && <div className={styles.statusTextListening}>🔴 Listening... Speak command now</div>}
+            {processing && <div className={styles.statusText}>DIFF is inspecting & responding...</div>}
+            {recording && <div className={styles.statusTextListening}>🔴 Listening... Say "Hey DIFF" or speak command</div>}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const input = form.elements.namedItem("textCommand") as HTMLInputElement;
+                if (input && input.value.trim()) {
+                  void handleCommandSend(input.value.trim());
+                  input.value = "";
+                }
+              }}
+              style={{ display: "flex", gap: "6px", marginTop: "6px" }}
+            >
+              <input
+                type="text"
+                name="textCommand"
+                placeholder="Type command or question..."
+                style={{
+                  flex: 1,
+                  background: "#09090b",
+                  border: "1px solid #3f3f46",
+                  color: "#f4f4f5",
+                  padding: "6px 10px",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={processing}
+                style={{
+                  background: "#f97316",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Send
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -205,8 +295,8 @@ export function GlobalVoiceAgent() {
           if (!isOpen) setIsOpen(true);
           toggleRecording();
         }}
-        title="Sarvam AI Global Voice Operator"
-        aria-label="Sarvam AI Global Voice Operator"
+        title="DIFF — Sarvam Voice Guide Agent (Say 'Hey DIFF')"
+        aria-label="DIFF — Sarvam Voice Guide Agent"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />

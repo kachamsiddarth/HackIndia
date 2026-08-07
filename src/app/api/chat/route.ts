@@ -22,6 +22,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       language?: SarvamLanguage;
       projectId?: string;
       context?: Record<string, unknown>;
+      mode?: string; // 'preview_qa' = bypass browser agent, answer directly about webpage content
     };
 
     if (!body.message?.trim()) throw new Error("Message is required.");
@@ -65,26 +66,41 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
     }
 
-    // Instantiate Sarvam AI Browser Agent to orchestrate application actions
-    const { SarvamBrowserAgent } = await import("@/lib/sarvam/browser-agent");
-    const browserAgent = new SarvamBrowserAgent();
+    let finalResponse: string;
+    let navigationTarget: string | undefined;
+    let actionResults: unknown[] = [];
 
-    const agentResult = await browserAgent.planAndExecute(aiInput, {
-      userId: user.id,
-      projectId: body.projectId,
-      currentPath: (body.context as any)?.currentPath,
-      repoName: (body.context as any)?.repoName,
-      pipelineRunId: (body.context as any)?.pipelineRunId,
-    });
+    if (body.mode === "preview_qa") {
+      // Direct LLM Q&A mode — bypasses the browser agent entirely.
+      // Used for Experience page follow-up questions about the live preview webpage.
+      const systemPrompt = `You are a helpful accessibility assistant. The user is viewing a live preview of an imported website repository. Answer questions specifically about the webpage content provided in the user message. Be concise, accurate and speak in plain English. Do not navigate anywhere or run pipelines.`;
+      finalResponse = await generateCompletion<string>(aiInput, { systemPrompt });
+      navigationTarget = undefined;
+      actionResults = [];
+    } else {
+      // Instantiate Sarvam AI Browser Agent to orchestrate application actions
+      const { SarvamBrowserAgent } = await import("@/lib/sarvam/browser-agent");
+      const browserAgent = new SarvamBrowserAgent();
 
-    let finalResponse = agentResult.responseText;
+      const agentResult = await browserAgent.planAndExecute(aiInput, {
+        userId: user.id,
+        projectId: body.projectId,
+        currentPath: (body.context as any)?.currentPath,
+        repoName: (body.context as any)?.repoName,
+        pipelineRunId: (body.context as any)?.pipelineRunId,
+      });
+
+      finalResponse = agentResult.responseText;
+      navigationTarget = agentResult.navigationTarget;
+      actionResults = agentResult.actionResults ?? [];
+    }
 
     // Translate response back to user's language if needed
     if (lang !== "en-IN") {
       try {
-        finalResponse = await translateText(agentResult.responseText, "en", lang.split("-")[0]);
+        finalResponse = await translateText(finalResponse, "en", lang.split("-")[0]);
       } catch {
-        finalResponse = agentResult.responseText; // fallback
+        // keep original on translation failure
       }
     }
 
@@ -104,7 +120,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         role: "assistant",
         content: finalResponse,
         language: lang,
-        context: agentResult.navigationTarget ? { navigationTarget: agentResult.navigationTarget } : null,
+        context: navigationTarget ? { navigationTarget } : null,
       },
     ]);
 
@@ -112,8 +128,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       data: {
         reply: finalResponse,
         language: lang,
-        navigationTarget: agentResult.navigationTarget,
-        actionResults: agentResult.actionResults,
+        navigationTarget,
+        actionResults,
       },
       error: null,
     });
