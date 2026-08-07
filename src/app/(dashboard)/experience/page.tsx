@@ -304,6 +304,10 @@ function ExperienceVoiceQnA({ selectedProject, filePath, source, speakWithSarvam
   const [recording, setRecording] = useState(false);
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
+  const loadingRef = useRef(false);
+  const startVoiceInputRef = useRef<() => void>(() => undefined);
+
+  loadingRef.current = loading;
 
   const handleSendQuestion = async (text: string) => {
     if (!text.trim() || loading) return;
@@ -367,6 +371,22 @@ function ExperienceVoiceQnA({ selectedProject, filePath, source, speakWithSarvam
     }
   };
 
+  startVoiceInputRef.current = startVoiceInput;
+
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.tagName === "SELECT" || target?.isContentEditable;
+      if (event.repeat || isTyping || event.ctrlKey || !event.altKey || event.key.toLowerCase() !== "v") return;
+
+      event.preventDefault();
+      if (!loadingRef.current) startVoiceInputRef.current();
+    };
+
+    window.addEventListener("keydown", onShortcut);
+    return () => window.removeEventListener("keydown", onShortcut);
+  }, []);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "12px" }}>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
@@ -374,6 +394,8 @@ function ExperienceVoiceQnA({ selectedProject, filePath, source, speakWithSarvam
           type="button"
           onClick={startVoiceInput}
           disabled={loading}
+          aria-keyshortcuts="Alt+V"
+          title="Ask a voice question (Alt+V)"
           style={{
             background: recording ? "#ef4444" : "#f97316",
             color: "#fff",
@@ -388,7 +410,7 @@ function ExperienceVoiceQnA({ selectedProject, filePath, source, speakWithSarvam
             cursor: "pointer",
           }}
         >
-          🎤 {recording ? "Listening..." : "Ask Voice Question"}
+          🎤 {recording ? "Listening..." : "Ask Voice Question"} <kbd aria-hidden="true" style={{ fontSize: "0.7rem", opacity: 0.85, border: "1px solid currentColor", borderRadius: "4px", padding: "1px 4px" }}>Alt+V</kbd>
         </button>
 
         <input

@@ -42,15 +42,17 @@
 .select {
   padding: 0.6rem 0.8rem;
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-base) solid var(--color-border-strong);
   background: var(--color-bg-elevated);
   color: var(--color-text-primary);
   font-size: 0.875rem;
   outline: none;
+  box-shadow: var(--shadow-1);
 }
 
 .select:focus {
   border-color: var(--color-accent);
+  box-shadow: var(--shadow-hover-1);
 }
 
 .viewToggle {
@@ -59,7 +61,8 @@
   padding: 0.2rem;
   background: var(--color-bg-elevated);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-base) solid var(--color-border-strong);
+  box-shadow: var(--shadow-1);
 }
 
 .toggleBtn {
@@ -108,7 +111,7 @@
 
 .detailPanel {
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-thick) solid var(--color-border-ink);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   max-width: 600px;
@@ -118,6 +121,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-shadow: var(--shadow-3);
 }
 
 .detailHeader {
@@ -156,7 +160,8 @@
   padding: 0.6rem 0.75rem;
   background: var(--color-bg-base);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-base) solid var(--color-border-strong);
+  box-shadow: var(--shadow-1);
 }
 
 .metaLabel {

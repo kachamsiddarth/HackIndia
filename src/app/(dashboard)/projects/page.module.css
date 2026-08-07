@@ -94,7 +94,7 @@
   align-items: center;
   justify-content: space-between;
   padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: var(--border-thin) solid var(--color-border-strong);
 }
 
 .scoreGroup {
@@ -122,10 +122,11 @@
   gap: var(--space-2);
   max-height: 280px;
   overflow-y: auto;
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-thick) solid var(--color-border-ink);
   border-radius: var(--radius-md);
   padding: var(--space-2);
   background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-1);
 }
 
 .repoItem {
@@ -135,12 +136,13 @@
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-base) solid var(--color-border-strong);
   transition: background var(--duration-fast);
 }
 
 .repoItem:hover {
   background: var(--color-bg-hover);
+  border-color: var(--color-border-ink);
 }
 
 .repoInfo {

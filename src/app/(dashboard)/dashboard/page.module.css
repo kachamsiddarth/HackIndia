@@ -45,15 +45,15 @@
   gap: var(--space-2);
   padding: var(--space-5);
   background: var(--color-bg-surface);
-  border: var(--border-thick) solid var(--color-border-default);
+  border: var(--border-thick) solid var(--color-border-ink);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--shadow-2);
   transition: all var(--duration-normal) var(--ease-default);
 }
 
 .statCard:hover {
   box-shadow: var(--shadow-hover-2);
-  transform: translateY(-2px);
+  transform: translate(-2px, -2px);
 }
 
 .statLabel {
@@ -110,8 +110,9 @@
   gap: var(--space-3);
   color: var(--color-text-tertiary);
   background: var(--color-bg-elevated);
-  border: var(--border-base) solid var(--color-border-default);
+  border: var(--border-thick) solid var(--color-border-ink);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
 }
 
 .emptyIcon {
@@ -131,13 +132,16 @@
   padding: var(--space-3);
   background: var(--color-bg-elevated);
   border-radius: var(--radius-md);
-  border: var(--border-base) solid var(--color-border-subtle);
+  border: var(--border-thick) solid var(--color-border-ink);
+  box-shadow: var(--shadow-1);
   transition: all var(--duration-fast) var(--ease-default);
 }
 
 .repoRow:hover {
-  border-color: var(--color-border-default);
+  border-color: var(--color-border-ink);
   background: var(--color-bg-hover);
+  box-shadow: var(--shadow-hover-1);
+  transform: translate(-1px, -1px);
 }
 
 .repoInfo {

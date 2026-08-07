@@ -16,14 +16,18 @@
 
 .backLink {
   padding: 0.6rem 0.9rem;
-  border: 1px solid var(--color-border-default);
+  border: var(--border-thick) solid var(--color-border-ink);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   text-decoration: none;
+  box-shadow: var(--shadow-1);
+  transition: all var(--duration-fast) var(--ease-default);
 }
 
 .backLink:hover {
   background: var(--color-bg-hover);
+  box-shadow: var(--shadow-hover-1);
+  transform: translate(-1px, -1px);
 }
 
 .diffAction {

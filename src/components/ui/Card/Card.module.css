@@ -1,14 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════
-   AccessDiff — Card Component
+   AccessDiff — Card Component  (Neo-Brutalist Edition)
    Variants: default, glass
    ═══════════════════════════════════════════════════════════════ */
 
 .card {
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
+  /* Neo-brutalist: thick near-black border + hard offset shadow */
+  border: var(--border-thick) solid var(--color-border-ink);
   border-radius: var(--radius-lg);
   padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-2);
   transition:
     border-color var(--duration-normal) var(--ease-default),
     box-shadow var(--duration-normal) var(--ease-default),
@@ -17,9 +18,14 @@
 
 /* ── Interactive (hoverable) ── */
 .interactive:hover {
-  border-color: var(--color-border-default);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  border-color: var(--color-border-ink);
+  box-shadow: var(--shadow-hover-2);
+  transform: translate(-2px, -2px);
+}
+
+.interactive:active {
+  transform: translate(1px, 1px);
+  box-shadow: var(--shadow-pressed);
 }
 
 .interactive {
@@ -31,7 +37,7 @@
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-color: var(--glass-border);
+  border-color: var(--color-border-strong);
 }
 
 /* ── Padding Sizes ── */

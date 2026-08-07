@@ -40,10 +40,11 @@
 .input {
   width: 100%;
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-default);
+  border: var(--border-base) solid var(--color-border-strong);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   font-family: var(--font-body);
+  box-shadow: var(--shadow-1);
   transition:
     border-color var(--duration-fast) var(--ease-default),
     box-shadow var(--duration-fast) var(--ease-default);
@@ -54,13 +55,14 @@
 }
 
 .input:hover:not(:disabled):not(:focus) {
-  border-color: var(--color-border-strong);
+  border-color: var(--color-border-ink);
+  box-shadow: var(--shadow-hover-1);
 }
 
 .input:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px hsla(24, 95%, 53%, 0.15);
+  box-shadow: var(--shadow-hover-1);
 }
 
 .input:disabled {
