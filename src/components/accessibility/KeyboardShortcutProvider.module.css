@@ -1,0 +1,29 @@
+/*
+  KeyboardShortcutProvider.module.css
+
+  Accessibility-oriented styles. The goal of these rules is to render the
+  ARIA live regions + shortcut hint only for screen readers / assistive
+  tech, while keeping them invisible (no layout impact, no paint) for
+  sighted users who don't need them.  We follow the established a11y class
+  pattern used elsewhere in the app (the same tokens as the skip-link
+  visually-hidden utility in globals.css / reset.css).
+*/
+
+.visuallyHidden {
+  position: absolute !important;
+  left: -10000px !important;
+  top: auto !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  color: transparent !important;
+  background-color: transparent !important;
+}

@@ -137,3 +137,34 @@
   color: #ef4444;
   font-weight: 600;
 }
+
+.shortcutHint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin: 2px 0 4px 0;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px dashed rgba(249, 115, 22, 0.35);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  color: #d4d4d8;
+}
+
+.shortcutHint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid #3f3f46;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: #09090b;
+  color: #f4f4f5;
+  font-family: var(--font-jetbrains, "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.65rem;
+  line-height: 1;
+  font-weight: 600;
+}

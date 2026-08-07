@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { useKeyboardShortcuts, type VoiceRecordingState } from "@/components/accessibility/KeyboardShortcutProvider";
 import styles from "./GlobalVoiceAgent.module.css";
 
 export function GlobalVoiceAgent() {
@@ -15,6 +16,16 @@ export function GlobalVoiceAgent() {
   const recognitionRef = useRef<any>(null);
   const transcriptRef = useRef("");
   const pathname = usePathname();
+  const { registerToggleVoice, setVoiceState } = useKeyboardShortcuts();
+
+  // Mirror recording + processing to the shortcut provider so the
+  // Ctrl+Alt+V route can announce correct state transitions.
+  useEffect(() => {
+    let state: VoiceRecordingState = "idle";
+    if (recording) state = "listening";
+    else if (processing) state = "processing";
+    setVoiceState(state);
+  }, [recording, processing, setVoiceState]);
 
   // Extract project/repo context from current URL if available
   const extractContextFromUrl = () => {
@@ -136,7 +147,7 @@ export function GlobalVoiceAgent() {
     }
   };
 
-  const toggleRecording = () => {
+  const toggleRecording = useCallback(() => {
     if (recording) {
       if (recognitionRef.current) {
         try {
@@ -196,7 +207,40 @@ export function GlobalVoiceAgent() {
       console.error("Failed to start speech recognition:", e);
       setRecording(false);
     }
-  };
+  }, [recording, language]);
+
+  // Imperative handle invoked by the global Ctrl+Alt+V shortcut.
+  // This matches the FAB behavior: open the popover first (if closed),
+  // then flip the recording state.
+  const toggleVoice = useCallback(() => {
+    // Use a functional state update so we always see the latest recording
+    // state; prevents Ctrl+Alt+V double-presses from desyncing the provider
+    // announcement versus actual microphone state.
+    setIsOpen((prevIsOpen) => {
+      if (!prevIsOpen) {
+        // Kick popover open, then schedule the recording toggle for the
+        // next frame so React commits state first.
+        setTimeout(() => toggleRecording(), 0);
+        return true;
+      }
+      // Popover already open: toggle mic immediately.
+      setTimeout(() => toggleRecording(), 0);
+      return prevIsOpen;
+    });
+  }, [toggleRecording]);
+
+  // Register / unregister with the global keyboard provider on mount.
+  useEffect(() => {
+    const unregister = registerToggleVoice(toggleVoice);
+    return unregister;
+  }, [registerToggleVoice, toggleVoice]);
+
+  const isListening = recording;
+  const statusButtonLabel = isListening
+    ? "DIFF — Sarvam Voice Guide Agent, listening. Press Ctrl plus Alt plus V to stop."
+    : processing
+      ? "DIFF — Sarvam Voice Guide Agent, processing response."
+      : "DIFF — Sarvam Voice Guide Agent. Press Ctrl plus Alt plus V to start listening.";
 
   return (
     <div className={styles.container}>
@@ -224,6 +268,10 @@ export function GlobalVoiceAgent() {
                 <option value="bn-IN">Bengali (বাংলা)</option>
                 <option value="mr-IN">Marathi (मराठी)</option>
               </select>
+            </div>
+
+            <div className={styles.shortcutHint} aria-hidden="false">
+              Shortcut: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>V</kbd> toggles the microphone.
             </div>
 
             {transcript && (
@@ -295,8 +343,10 @@ export function GlobalVoiceAgent() {
           if (!isOpen) setIsOpen(true);
           toggleRecording();
         }}
-        title="DIFF — Sarvam Voice Guide Agent (Say 'Hey DIFF')"
-        aria-label="DIFF — Sarvam Voice Guide Agent"
+        title="DIFF — Sarvam Voice Guide Agent (Ctrl+Alt+V)"
+        aria-label={statusButtonLabel}
+        aria-pressed={isListening}
+        type="button"
       >
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
