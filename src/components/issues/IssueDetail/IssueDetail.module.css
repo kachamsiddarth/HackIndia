@@ -73,7 +73,7 @@
   margin: 0;
   padding: 1rem;
   border-radius: var(--radius-md);
-  background: hsl(230, 21%, 5%);
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
   font-family: var(--font-mono, monospace);
   font-size: 0.82rem;

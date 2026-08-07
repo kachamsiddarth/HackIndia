@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   AccessDiff — Header Component Styles
+   AccessDiff — Header Component Styles (Light Neo-Brutalist)
    ═══════════════════════════════════════════════════════════════ */
 
 .header {
@@ -9,7 +9,7 @@
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: var(--border-bottom-width) solid var(--color-border-bottom-color, var(--color-border-ink));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25,23 +25,31 @@
 }
 
 .crumbItem {
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   text-decoration: none;
-  font-weight: var(--weight-medium);
+  font-weight: 600;
 }
 
 .crumbItem:hover {
-  color: var(--color-text-primary);
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
 .crumbActive {
-  color: var(--color-text-primary);
-  font-weight: var(--weight-semibold);
+  color: var(--color-accent-text);
+  font-weight: 700;
+  background: var(--color-accent-muted);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: var(--border-base) solid var(--color-border-strong);
 }
 
 .separator {
-  color: var(--color-text-tertiary);
-  font-size: var(--text-xs);
+  color: var(--color-border-strong);
+  font-size: var(--text-sm);
+  font-weight: 700;
 }
 
 .actions {
@@ -54,20 +62,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-base) solid var(--color-border-default);
+  box-shadow: var(--shadow-1);
   transition:
     background var(--duration-fast) var(--ease-default),
     color var(--duration-fast) var(--ease-default),
-    border-color var(--duration-fast) var(--ease-default);
+    border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default),
+    transform var(--duration-fast) var(--ease-default);
 }
 
 .iconButton:hover {
   background: var(--color-bg-hover);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-default);
+  color: var(--color-accent);
+  border-color: var(--color-border-ink);
+  box-shadow: var(--shadow-hover-1);
+  transform: translate(-1px, -1px);
+}
+
+.iconButton:active {
+  transform: translate(1px, 1px);
+  box-shadow: var(--shadow-pressed);
 }

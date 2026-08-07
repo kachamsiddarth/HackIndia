@@ -1,68 +1,93 @@
 /* ═══════════════════════════════════════════════════════════════
-   AccessDiff — Design Tokens
-   All CSS custom properties for colors, spacing, shadows, radii
-   Source of truth: Design.md
+   AccessDiff — Premium Light Neo-Brutalist Design Tokens
+   Warm paper cream + ink + orange accent. Enterprise AI-grade.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Background Layers ── */
-  --color-bg-base:        hsl(230, 21%, 6%);     /* #0d0e14 — Deepest background */
-  --color-bg-surface:     hsl(230, 18%, 9%);     /* #131520 — Card/panel surface */
-  --color-bg-elevated:    hsl(230, 16%, 12%);    /* #1a1c28 — Elevated surface (modal, dropdown) */
-  --color-bg-hover:       hsl(230, 14%, 16%);    /* #242636 — Hover state */
-  --color-bg-active:      hsl(230, 12%, 20%);    /* #2e3040 — Active/pressed state */
+  /* ── Background Layers (Warm off-white / cream neutrals) ── */
+  --color-bg-base:        hsl(42, 38%, 97%);    /* #fbf7f0 — Warm paper cream */
+  --color-bg-surface:     hsl(0, 0%, 100%);     /* #ffffff — Pure card surface */
+  --color-bg-elevated:    hsl(42, 25%, 95%);    /* #f6f1e7 — Elevated panel */
+  --color-bg-hover:       hsl(42, 30%, 93%);    /* #f2ebe0 — Hover state */
+  --color-bg-active:      hsl(42, 20%, 90%);    /* #ebe3d4 — Pressed/active */
+  --color-bg-subtle:      hsl(42, 20%, 96%);    /* Subtle tinted fill */
 
-  /* ── Borders ── */
-  --color-border-subtle:  hsl(230, 12%, 18%);    /* Subtle divider */
-  --color-border-default: hsl(230, 10%, 24%);    /* Default border */
-  --color-border-strong:  hsl(230, 8%, 32%);     /* Emphasized border */
+  /* ── Tinted Background Accents (soft blue/purple neutrals) ── */
+  --color-bg-indigo-tint: hsl(235, 40%, 96%);   /* #f0f1fb — Soft indigo tint */
+  --color-bg-violet-tint: hsl(265, 35%, 96%);   /* #f3eefa — Soft violet tint */
+  --color-bg-sage-tint:   hsl(160, 25%, 95%);   /* #eef7f1 — Soft sage tint */
+  --color-bg-rose-tint:   hsl(10, 35%, 96%);    /* #fbeee9 — Soft rose tint */
 
-  /* ── Text ── */
-  --color-text-primary:   hsl(0, 0%, 95%);       /* #f2f2f2 — Primary text */
-  --color-text-secondary: hsl(230, 8%, 62%);     /* #979aa6 — Secondary text */
-  --color-text-tertiary:  hsl(230, 6%, 42%);     /* #65676e — Muted/disabled text */
-  --color-text-inverse:   hsl(230, 21%, 6%);     /* Dark text on light backgrounds */
+  /* ── Borders (Neo-Brutalist: THICK, defined, confident) ── */
+  --color-border-subtle:  hsl(40, 15%, 86%);    /* Subtle divider */
+  --color-border-default: hsl(40, 12%, 78%);    /* Default border */
+  --color-border-strong:  hsl(230, 15%, 30%);   /* Strong ink border */
+  --color-border-ink:     hsl(230, 20%, 16%);   /* Near-black bold border */
 
-  /* ── Accent (Orange) ── */
-  --color-accent:         hsl(24, 95%, 53%);     /* #f97316 — Primary accent */
-  --color-accent-hover:   hsl(24, 95%, 60%);     /* Hover state */
-  --color-accent-muted:   hsl(24, 40%, 18%);     /* Muted background for accent elements */
-  --color-accent-text:    hsl(24, 95%, 70%);     /* Accent text on dark backgrounds */
+  /* ── Border Widths (Neo-Brutalist signatures) ── */
+  --border-thin:    1.5px;
+  --border-base:    2.5px;   /* Default component border */
+  --border-thick:   3.5px;   /* Emphasized / card border */
+  --border-brutal:  4px;     /* Maximum brutalist statement */
 
-  /* ── Semantic Colors ── */
-  --color-success:        hsl(142, 71%, 45%);    /* #22c55e — Pass, verified, resolved */
-  --color-success-muted:  hsl(142, 30%, 14%);
-  --color-warning:        hsl(38, 92%, 50%);     /* #eab308 — Needs attention */
-  --color-warning-muted:  hsl(38, 30%, 14%);
-  --color-error:          hsl(0, 84%, 60%);      /* #ef4444 — Critical, failed */
-  --color-error-muted:    hsl(0, 30%, 14%);
-  --color-info:           hsl(217, 91%, 60%);    /* #3b82f6 — Informational */
-  --color-info-muted:     hsl(217, 30%, 14%);
+  /* ── Text (High contrast WCAG AA on warm white) ── */
+  --color-text-primary:   hsl(230, 22%, 14%);   /* #161828 — Ink primary */
+  --color-text-secondary: hsl(230, 10%, 42%);   /* #5f6370 — Secondary text */
+  --color-text-tertiary:  hsl(230, 6%, 58%);    /* #8a8c94 — Muted/captions */
+  --color-text-inverse:   hsl(0, 0%, 98%);      /* Light text on dark chips */
 
-  /* ── Severity Colors ── */
+  /* ── Accent (Premium ink-navy — no orange/brights) ── */
+  --color-accent:         hsl(233, 40%, 22%);   /* #1f2350 — Navy ink */
+  --color-accent-hover:   hsl(233, 45%, 30%);   /* Hover */
+  --color-accent-muted:   hsl(233, 35%, 93%);   /* Muted accent bg */
+  --color-accent-text:    hsl(233, 40%, 28%);   /* Accent on light */
+
+  /* ── Secondary Accent (Soft indigo for CTAs) ── */
+  --color-indigo:         hsl(238, 55%, 55%);   /* #5a64e8 — Soft indigo */
+  --color-indigo-hover:   hsl(238, 55%, 48%);
+  --color-indigo-muted:   hsl(238, 55%, 93%);
+
+  /* ── Semantic Colors (Soft pastel variants, WCAG AA) ── */
+  --color-success:        hsl(152, 45%, 32%);   /* #2d7a5a — Muted forest */
+  --color-success-muted:  hsl(152, 40%, 93%);
+
+  --color-warning:        hsl(35, 70%, 42%);    /* #a56c18 — Warm amber */
+  --color-warning-muted:  hsl(40, 55%, 94%);
+
+  --color-error:          hsl(4, 55%, 45%);     /* #b63c32 — Soft brick */
+  --color-error-muted:    hsl(6, 45%, 95%);
+
+  --color-info:           hsl(210, 55%, 42%);   /* #305b87 — Dusty blue */
+  --color-info-muted:     hsl(210, 45%, 94%);
+
+  /* ── Severity Colors (Enterprise-tuned pastels) ── */
   --color-severity-critical: var(--color-error);
-  --color-severity-major:    hsl(15, 85%, 55%);
+  --color-severity-major:    hsl(12, 60%, 48%);
   --color-severity-minor:    var(--color-warning);
   --color-severity-advisory: var(--color-info);
 
-  /* ── Glass Effect ── */
-  --glass-bg:             hsla(230, 18%, 9%, 0.7);
-  --glass-border:         hsla(230, 10%, 24%, 0.5);
-  --glass-blur:           12px;
+  /* ── Glass Effect (Light mode translucent) ── */
+  --glass-bg:             hsla(42, 38%, 97%, 0.78);
+  --glass-border:         hsla(40, 12%, 78%, 0.6);
+  --glass-blur:           16px;
 
-  /* ── Spacing Scale ── */
+  /* ── Expanded Spacing Scale (Apple/Stripe-grade whitespace) ── */
+  --space-05:  0.125rem;  /* 2px */
   --space-1:   0.25rem;   /* 4px */
   --space-2:   0.5rem;    /* 8px */
   --space-3:   0.75rem;   /* 12px */
   --space-4:   1rem;      /* 16px */
   --space-5:   1.25rem;   /* 20px */
   --space-6:   1.5rem;    /* 24px */
+  --space-7:   1.75rem;   /* 28px */
   --space-8:   2rem;      /* 32px */
-  --space-10:  2.5rem;    /* 40px */
-  --space-12:  3rem;      /* 48px */
-  --space-16:  4rem;      /* 64px */
-  --space-20:  5rem;      /* 80px */
-  --space-24:  6rem;      /* 96px */
+  --space-9:   2.5rem;    /* 40px */
+  --space-10:  3rem;      /* 48px */
+  --space-12:  3.5rem;    /* 56px */
+  --space-14:  4rem;      /* 64px */
+  --space-16:  5rem;      /* 80px */
+  --space-20:  6rem;      /* 96px */
+  --space-24:  8rem;      /* 128px */
 
   /* ── Layout ── */
   --sidebar-width:       260px;
@@ -71,46 +96,161 @@
   --content-max-width:   1200px;
   --content-padding:     var(--space-6);
 
-  /* ── Border Radius ── */
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-xl:   16px;
-  --radius-2xl:  20px;
+  /* ── Border Radius (Premium: large, generous, confident) ── */
+  --radius-xs:   6px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-2xl:  26px;
+  --radius-3xl:  32px;
   --radius-full: 9999px;
 
-  /* ── Shadows & Elevation ── */
-  --shadow-sm:   0 1px 2px hsla(0, 0%, 0%, 0.3);
-  --shadow-md:   0 4px 6px hsla(0, 0%, 0%, 0.3),
-                 0 1px 3px hsla(0, 0%, 0%, 0.2);
-  --shadow-lg:   0 10px 15px hsla(0, 0%, 0%, 0.3),
-                 0 4px 6px hsla(0, 0%, 0%, 0.2);
-  --shadow-xl:   0 20px 25px hsla(0, 0%, 0%, 0.35),
-                 0 10px 10px hsla(0, 0%, 0%, 0.2);
-  --shadow-glow: 0 0 20px hsla(24, 95%, 53%, 0.15);
+  /* ── Directional Border Tokens (3D lighting system)
+     TOP: thinner, lighter
+     LEFT: medium
+     RIGHT: slightly darker
+     BOTTOM: thickest, darkest
+     Creates realistic depth without gradients ── */
+  --border-top-width:    var(--border-thin);
+  --border-left-width:   var(--border-base);
+  --border-right-width:  calc(var(--border-base) + 0.5px);
+  --border-bottom-width: var(--border-thick);
 
-  /* ── Focus Ring ── */
-  --focus-ring:  0 0 0 2px var(--color-bg-base), 0 0 0 4px var(--color-accent);
+  --border-top-color:    var(--color-border-subtle);
+  --border-left-color:   var(--color-border-default);
+  --border-right-color:  var(--color-border-strong);
+  --border-bottom-color: var(--color-border-ink);
+
+  /* ── Neo-Brutalist Offset Shadows (layered elevation)
+     Level 1: 2px offset (base cards)
+     Level 2: 4px offset (elevated cards)
+     Level 3: 8px offset (modals, hero elements)
+     Hover: offset +1, opacity +0.02
+     Pressed: offset 0, opacity minimal ── */
+  --shadow-1:     2px 2px 0 hsla(230, 20%, 16%, 0.08);
+  --shadow-2:     4px 4px 0 hsla(230, 20%, 16%, 0.10);
+  --shadow-3:     8px 8px 0 hsla(230, 20%, 16%, 0.12);
+
+  --shadow-1-soft: 2px 2px 0 hsla(230, 20%, 16%, 0.08), 0 2px 6px hsla(230, 15%, 20%, 0.05);
+  --shadow-2-soft: 4px 4px 0 hsla(230, 20%, 16%, 0.10), 0 6px 14px hsla(230, 15%, 20%, 0.07);
+  --shadow-3-soft: 8px 8px 0 hsla(230, 20%, 16%, 0.12), 0 14px 28px hsla(230, 15%, 20%, 0.09);
+
+  --shadow-hover-1:     3px 3px 0 hsla(230, 20%, 16%, 0.10);
+  --shadow-hover-2:     5px 5px 0 hsla(230, 20%, 16%, 0.12);
+  --shadow-hover-3:     10px 10px 0 hsla(230, 20%, 16%, 0.14);
+
+  --shadow-hover-1-soft: 3px 3px 0 hsla(230, 20%, 16%, 0.10), 0 3px 8px hsla(230, 15%, 20%, 0.06);
+  --shadow-hover-2-soft: 5px 5px 0 hsla(230, 20%, 16%, 0.12), 0 8px 18px hsla(230, 15%, 20%, 0.08);
+  --shadow-hover-3-soft: 10px 10px 0 hsla(230, 20%, 16%, 0.14), 0 18px 36px hsla(230, 15%, 20%, 0.10);
+
+  --shadow-pressed:      1px 1px 0 hsla(230, 20%, 16%, 0.06);
+  --shadow-pressed-soft: 1px 1px 0 hsla(230, 20%, 16%, 0.06), 0 1px 3px hsla(230, 15%, 20%, 0.03);
+
+  /* Legacy aliases (backward compatible) */
+  --shadow-sm:   var(--shadow-1-soft);
+  --shadow-md:   var(--shadow-2-soft);
+  --shadow-lg:   var(--shadow-3-soft);
+  --shadow-xl:   var(--shadow-3);
+  --shadow-2xl:  var(--shadow-3);
+  --shadow-accent: 4px 4px 0 hsla(233, 40%, 22%, 0.25), 0 4px 12px hsla(233, 40%, 22%, 0.12);
+  --shadow-inner: inset 1px 1px 0 hsla(230, 20%, 16%, 0.04), inset -1px -1px 0 hsla(0, 0%, 100%, 0.8);
+  --shadow-hover-sm: var(--shadow-hover-1-soft);
+  --shadow-hover-md: var(--shadow-hover-2-soft);
+  --shadow-hover-lg: var(--shadow-hover-3-soft);
+
+  /* ── Focus Ring (Visible, brutal, thick) ── */
+  --focus-ring:  0 0 0 2px var(--color-bg-surface), 0 0 0 5px var(--color-accent);
+
+  /* ── Transition Timing (Premium micro-interactions) ── */
+  --ease-default:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in:        cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-out:       cubic-bezier(0, 0, 0.34, 1);
+  --ease-spring:    cubic-bezier(0.22, 1.4, 0.36, 1);
+  --ease-bounce:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --duration-fastest: 80ms;
+  --duration-fast:    140ms;
+  --duration-normal:  220ms;
+  --duration-slow:    340ms;
+  --duration-slower:  520ms;
+
+  /* ── Typography Scale (Strong hierarchy, readable) ── */
+  --text-xs:    0.75rem;    /* 12px */
+  --text-sm:    0.8125rem;  /* 13px */
+  --text-base:  0.9375rem;  /* 15px */
+  --text-lg:    1.0625rem;  /* 17px */
+  --text-xl:    1.25rem;    /* 20px */
+  --text-2xl:   1.5rem;     /* 24px */
+  --text-3xl:   1.875rem;   /* 30px */
+  --text-4xl:   2.375rem;   /* 38px */
+  --text-5xl:   3rem;       /* 48px */
+  --text-6xl:   3.75rem;    /* 60px */
+
+  --leading-tight:   1.2;
+  --leading-normal:  1.55;
+  --leading-relaxed: 1.7;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal:  0.005em;
+  --tracking-wide:    0.04em;
+
+  --weight-regular:   400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+  --weight-extrabold: 800;
+
+  /* Font stacks — Professional SaaS, no decorative */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* ── Content Container (Grid gutters) ── */
+  --container-pad-x: var(--space-7);
 }
 
-/* ── High Contrast Mode ── */
+/* ── High Contrast Mode (WCAG AAA Light) ── */
 [data-theme="high-contrast"] {
-  --color-bg-base:        hsl(0, 0%, 0%);
-  --color-bg-surface:     hsl(0, 0%, 5%);
-  --color-bg-elevated:    hsl(0, 0%, 10%);
-  --color-bg-hover:       hsl(0, 0%, 15%);
-  --color-bg-active:      hsl(0, 0%, 20%);
-  --color-text-primary:   hsl(0, 0%, 100%);
-  --color-text-secondary: hsl(0, 0%, 80%);
-  --color-text-tertiary:  hsl(0, 0%, 60%);
-  --color-border-subtle:  hsl(0, 0%, 25%);
-  --color-border-default: hsl(0, 0%, 40%);
-  --color-border-strong:  hsl(0, 0%, 55%);
-  --color-accent:         hsl(24, 100%, 60%);
-  --color-accent-hover:   hsl(24, 100%, 68%);
+  --color-bg-base:        hsl(0, 0%, 100%);
+  --color-bg-surface:     hsl(0, 0%, 100%);
+  --color-bg-elevated:    hsl(0, 0%, 96%);
+  --color-bg-hover:       hsl(0, 0%, 92%);
+  --color-bg-active:      hsl(0, 0%, 88%);
+
+  --color-text-primary:   hsl(0, 0%, 0%);
+  --color-text-secondary: hsl(0, 0%, 18%);
+  --color-text-tertiary:  hsl(0, 0%, 30%);
+
+  --color-border-subtle:  hsl(0, 0%, 20%);
+  --color-border-default: hsl(0, 0%, 0%);
+  --color-border-strong:  hsl(0, 0%, 0%);
+  --color-border-ink:     hsl(0, 0%, 0%);
+
+  --color-accent:         hsl(233, 80%, 30%);
+  --color-accent-hover:   hsl(233, 80%, 22%);
+
+  --shadow-1:   3px 3px 0 hsl(0, 0%, 0%);
+  --shadow-2:   5px 5px 0 hsl(0, 0%, 0%);
+  --shadow-3:   8px 8px 0 hsl(0, 0%, 0%);
+  --shadow-1-soft: 3px 3px 0 hsl(0, 0%, 0%), 0 2px 6px hsl(0, 0%, 0%);
+  --shadow-2-soft: 5px 5px 0 hsl(0, 0%, 0%), 0 6px 14px hsl(0, 0%, 0%);
+  --shadow-3-soft: 8px 8px 0 hsl(0, 0%, 0%), 0 14px 28px hsl(0, 0%, 0%);
+
+  --shadow-sm:   var(--shadow-1-soft);
+  --shadow-md:   var(--shadow-2-soft);
+  --shadow-lg:   var(--shadow-3-soft);
+  --shadow-xl:   var(--shadow-3);
+  --shadow-2xl:  var(--shadow-3);
+  --shadow-hover-sm: var(--shadow-hover-1-soft);
+  --shadow-hover-md: var(--shadow-hover-2-soft);
+  --shadow-hover-lg: var(--shadow-hover-3-soft);
+
+  --focus-ring:  0 0 0 2px #ffffff, 0 0 0 6px hsl(0, 0%, 0%);
 }
 
-/* ── Responsive Breakpoints (used in @media queries) ──
+/* ── Responsive Breakpoints (documented literals for @media)
    --breakpoint-sm:   640px;
    --breakpoint-md:   768px;
    --breakpoint-lg:   1024px;
@@ -118,4 +258,4 @@
    --breakpoint-2xl:  1536px;
    NOTE: CSS custom properties cannot be used in @media queries,
          so these values are documented here and used as literals.
-*/
+ */

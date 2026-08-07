@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   AccessDiff — Dashboard Home Page Styles
+   AccessDiff — Dashboard Home Page Styles (Light Neo-Brutalist)
    ═══════════════════════════════════════════════════════════════ */
 
 .container {
@@ -24,7 +24,7 @@
 .title {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
+  font-weight: 800;
   color: var(--color-text-primary);
 }
 
@@ -43,6 +43,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-bg-surface);
+  border: var(--border-thick) solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  transition: all var(--duration-normal) var(--ease-default);
+}
+
+.statCard:hover {
+  box-shadow: var(--shadow-hover-2);
+  transform: translateY(-2px);
 }
 
 .statLabel {
@@ -50,14 +61,15 @@
   color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
-  font-weight: var(--weight-medium);
+  font-weight: 700;
 }
 
 .statValue {
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
+  font-size: var(--text-4xl);
+  font-weight: 800;
   color: var(--color-text-primary);
   font-family: var(--font-mono);
+  line-height: var(--leading-tight);
 }
 
 .statSub {
@@ -66,6 +78,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  font-weight: 600;
 }
 
 .sectionGrid {
@@ -83,7 +96,7 @@
 
 .cardTitle {
   font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
@@ -96,8 +109,71 @@
   text-align: center;
   gap: var(--space-3);
   color: var(--color-text-tertiary);
+  background: var(--color-bg-elevated);
+  border: var(--border-base) solid var(--color-border-default);
+  border-radius: var(--radius-lg);
 }
 
 .emptyIcon {
   color: var(--color-accent);
+}
+
+.repoList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.repoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  border: var(--border-base) solid var(--color-border-subtle);
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.repoRow:hover {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-hover);
+}
+
+.repoInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.repoLink {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.repoLink:hover {
+  color: var(--color-accent);
+}
+
+.repoMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.repoActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sectionGrid {
+    grid-template-columns: 1fr;
+  }
 }

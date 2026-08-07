@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   AccessDiff — Button Component
+   AccessDiff — Button Component (Light Neo-Brutalist)
    Variants: primary, secondary, ghost, danger, success
    Sizes: sm, md, lg
    ═══════════════════════════════════════════════════════════════ */
@@ -9,13 +9,14 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border: 1px solid transparent;
+  border: var(--border-thick) solid transparent;
   border-radius: var(--radius-md);
   font-family: var(--font-body);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
+  box-shadow: var(--shadow-1);
   transition:
     background var(--duration-fast) var(--ease-default),
     border-color var(--duration-fast) var(--ease-default),
@@ -26,11 +27,12 @@
 
 .button:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
+  box-shadow: var(--shadow-2), var(--focus-ring);
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translateY(2px);
+  box-shadow: var(--shadow-pressed);
 }
 
 .button:disabled {
@@ -63,26 +65,29 @@
 /* Primary */
 .primary {
   background: var(--color-accent);
-  color: white;
-  border-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--color-border-ink);
 }
 
 .primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-  box-shadow: var(--shadow-glow);
+  border-color: var(--color-border-ink);
+  box-shadow: var(--shadow-hover-2);
+  transform: translateY(-2px);
 }
 
 /* Secondary */
 .secondary {
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-surface);
   color: var(--color-text-primary);
-  border-color: var(--color-border-default);
+  border-color: var(--color-border-ink);
 }
 
 .secondary:hover:not(:disabled) {
   background: var(--color-bg-hover);
-  border-color: var(--color-border-strong);
+  border-color: var(--color-border-ink);
+  box-shadow: var(--shadow-hover-2);
+  transform: translateY(-2px);
 }
 
 /* Ghost */
@@ -90,59 +95,71 @@
   background: transparent;
   color: var(--color-text-secondary);
   border-color: transparent;
+  box-shadow: none;
 }
 
 .ghost:hover:not(:disabled) {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+}
+
+.ghost:active:not(:disabled) {
+  background: var(--color-bg-active);
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 /* Danger */
 .danger {
-  background: var(--color-error);
-  color: white;
+  background: var(--color-error-muted);
+  color: var(--color-error);
   border-color: var(--color-error);
 }
 
 .danger:hover:not(:disabled) {
-  background: hsl(0, 84%, 55%);
-  border-color: hsl(0, 84%, 55%);
+  background: hsl(6, 40%, 92%);
+  border-color: var(--color-error);
+  box-shadow: var(--shadow-hover-2);
+  transform: translateY(-2px);
 }
 
 /* Success */
 .success {
-  background: var(--color-success);
-  color: white;
+  background: var(--color-success-muted);
+  color: var(--color-success);
   border-color: var(--color-success);
 }
 
 .success:hover:not(:disabled) {
-  background: hsl(142, 71%, 40%);
-  border-color: hsl(142, 71%, 40%);
+  background: hsl(152, 35%, 90%);
+  border-color: var(--color-success);
+  box-shadow: var(--shadow-hover-2);
+  transform: translateY(-2px);
 }
 
 /* ═══════════════ SIZES ═══════════════ */
 
 /* Small */
 .sm {
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-4);
   font-size: var(--text-sm);
-  height: 32px;
+  height: 36px;
   border-radius: var(--radius-sm);
 }
 
 /* Medium (default) */
 .md {
-  padding: 6px var(--space-4);
+  padding: var(--space-2) var(--space-5);
   font-size: var(--text-base);
-  height: 40px;
+  height: 44px;
 }
 
 /* Large */
 .lg {
-  padding: var(--space-2) var(--space-6);
+  padding: var(--space-3) var(--space-7);
   font-size: var(--text-lg);
-  height: 48px;
+  height: 52px;
   border-radius: var(--radius-lg);
 }
 
@@ -157,13 +174,13 @@
 }
 
 .iconOnly.sm {
-  width: 32px;
+  width: 36px;
 }
 
 .iconOnly.md {
-  width: 40px;
+  width: 44px;
 }
 
 .iconOnly.lg {
-  width: 48px;
+  width: 52px;
 }
